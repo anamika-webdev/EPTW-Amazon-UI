@@ -12,15 +12,15 @@ const { testConnection } = require('./src/config/database');
 const passport = require('./src/config/passport');
 
 // Import middleware
-const { errorHandler, notFound } = require('./src/middleware/errorHandler');
+const { errorHandler, notFound } = require('./middleware/errorHandler');
 
 // Import routes
-const authRoutes = require('./src/routes/auth.routes');
-const permitRoutes = require('./src/routes/permit.routes');
-const siteRoutes = require('./src/routes/site.routes');
-const userRoutes = require('./src/routes/user.routes');
-const vendorRoutes = require('./src/routes/vendor.routes');
-const masterDataRoutes = require('./src/routes/master.routes');
+const authRoutes = require('./routes/authRoutes');
+const permitRoutes = require('./routes/permitRoutes');
+const siteRoutes = require('./routes/siteRoutes');
+const userRoutes = require('./routes/userRoutes');
+const vendorRoutes = require('./routes/vendorRoutes');
+const masterDataRoutes = require('./routes/masterDataRoutes');
 
 // Initialize express app
 const app = express();

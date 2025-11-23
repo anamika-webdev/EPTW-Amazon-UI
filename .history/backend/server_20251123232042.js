@@ -15,12 +15,12 @@ const passport = require('./src/config/passport');
 const { errorHandler, notFound } = require('./src/middleware/errorHandler');
 
 // Import routes
-const authRoutes = require('./src/routes/auth.routes');
-const permitRoutes = require('./src/routes/permit.routes');
-const siteRoutes = require('./src/routes/site.routes');
-const userRoutes = require('./src/routes/user.routes');
-const vendorRoutes = require('./src/routes/vendor.routes');
-const masterDataRoutes = require('./src/routes/master.routes');
+const authRoutes = require('./src/routes/authRoutes');
+const permitRoutes = require('./src/routes/permitRoutes');
+const siteRoutes = require('./src/routes/siteRoutes');
+const userRoutes = require('./src/routes/userRoutes');
+const vendorRoutes = require('./src/routes/vendorRoutes');
+const masterDataRoutes = require('./src/routes/masterDataRoutes');
 
 // Initialize express app
 const app = express();
