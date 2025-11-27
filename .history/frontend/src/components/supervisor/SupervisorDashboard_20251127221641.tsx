@@ -173,7 +173,7 @@ export function SupervisorDashboard({ onNavigate }: SupervisorDashboardProps) {
           <StatCard
             title="Total Workers"
             value={stats.total_workers}
-            icon={<Users className="w-5 h-5" />}
+            icon={Users}
             color="blue"
           />
         </button>
@@ -181,7 +181,7 @@ export function SupervisorDashboard({ onNavigate }: SupervisorDashboardProps) {
           <StatCard
             title="PTW Issued"
             value={stats.total_permits}
-            icon={<FileText className="w-5 h-5" />}
+            icon={FileText}
             color="green"
           />
         </div>
@@ -189,15 +189,15 @@ export function SupervisorDashboard({ onNavigate }: SupervisorDashboardProps) {
           <StatCard
             title="Initiated"
             value={stats.initiated_permits}
-            icon={<PlayCircle className="w-5 h-5" />}
-            color="yellow"
+            icon={PlayCircle}
+            color="slate"
           />
         </div>
         <div>
           <StatCard
             title="Approved"
             value={stats.approved_permits}
-            icon={<CheckCircle className="w-5 h-5" />}
+            icon={CheckCircle}
             color="green"
           />
         </div>
@@ -205,7 +205,7 @@ export function SupervisorDashboard({ onNavigate }: SupervisorDashboardProps) {
           <StatCard
             title="In Progress"
             value={stats.in_progress_permits}
-            icon={<Clock className="w-5 h-5" />}
+            icon={Clock}
             color="blue"
           />
         </div>
@@ -213,8 +213,8 @@ export function SupervisorDashboard({ onNavigate }: SupervisorDashboardProps) {
           <StatCard
             title="Closed"
             value={stats.closed_permits}
-            icon={<XCircle className="w-5 h-5" />}
-            color="gray"
+            icon={XCircle}
+            color="purple"
           />
         </div>
       </div>
