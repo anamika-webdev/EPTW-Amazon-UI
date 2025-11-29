@@ -9,6 +9,7 @@ import type {
   MasterPPE,
   MasterChecklistQuestion,
   ApiResponse,
+  PaginatedResponse,
   CreatePermitFormData,
   SupervisorDashboardStats,
   PermitTeamMember
@@ -41,6 +42,7 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error: AxiosError) => {
+    // Log errors but don't redirect automatically
     if (error.response?.status === 401) {
       console.error('Unauthorized - token may be invalid');
     }
@@ -93,8 +95,8 @@ export const dashboardAPI = {
 
 // ============= Sites APIs =============
 export const sitesAPI = {
-  getAll: async (filters?: any): Promise<ApiResponse<Site[]>> => {
-    const response = await api.get('/sites', { params: filters });
+  getAll: async (): Promise<ApiResponse<Site[]>> => {
+    const response = await api.get('/sites');
     return response.data;
   },
 
@@ -127,11 +129,6 @@ export const usersAPI = {
     return response.data;
   },
 
-  getWorkers: async (): Promise<ApiResponse<User[]>> => {
-    const response = await api.get('/users/workers');
-    return response.data;
-  },
-
   getById: async (id: number): Promise<ApiResponse<User>> => {
     const response = await api.get(`/users/${id}`);
     return response.data;
@@ -155,8 +152,8 @@ export const usersAPI = {
 
 // ============= Vendors APIs =============
 export const vendorsAPI = {
-  getAll: async (filters?: any): Promise<ApiResponse<Vendor[]>> => {
-    const response = await api.get('/vendors', { params: filters });
+  getAll: async (): Promise<ApiResponse<Vendor[]>> => {
+    const response = await api.get('/vendors');
     return response.data;
   },
 
@@ -231,9 +228,6 @@ export const masterAPI = {
     return response.data;
   },
 };
-
-// Export as masterDataAPI for backward compatibility
-export const masterDataAPI = masterAPI;
 
 // ============= Team Members APIs =============
 export const teamMembersAPI = {

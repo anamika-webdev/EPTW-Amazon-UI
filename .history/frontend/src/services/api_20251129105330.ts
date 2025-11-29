@@ -93,8 +93,8 @@ export const dashboardAPI = {
 
 // ============= Sites APIs =============
 export const sitesAPI = {
-  getAll: async (filters?: any): Promise<ApiResponse<Site[]>> => {
-    const response = await api.get('/sites', { params: filters });
+  getAll: async (): Promise<ApiResponse<Site[]>> => {
+    const response = await api.get('/sites');
     return response.data;
   },
 
@@ -155,8 +155,8 @@ export const usersAPI = {
 
 // ============= Vendors APIs =============
 export const vendorsAPI = {
-  getAll: async (filters?: any): Promise<ApiResponse<Vendor[]>> => {
-    const response = await api.get('/vendors', { params: filters });
+  getAll: async (): Promise<ApiResponse<Vendor[]>> => {
+    const response = await api.get('/vendors');
     return response.data;
   },
 
