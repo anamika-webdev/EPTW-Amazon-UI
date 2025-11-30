@@ -31,6 +31,7 @@ function App() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
 
+  // Load user ONCE on mount
   useEffect(() => {
     if (isInitialized) return;
     
@@ -39,7 +40,9 @@ function App() {
     
     if (token && userStr) {
       try {
-        setCurrentUser(JSON.parse(userStr));
+        const user = JSON.parse(userStr);
+        console.log('🔄 Loading user from storage:', user);
+        setCurrentUser(user);
       } catch (error) {
         console.error('Error parsing user:', error);
         localStorage.clear();
@@ -51,6 +54,10 @@ function App() {
   }, [isInitialized]);
 
   const handleLogin = (user: User) => {
+    console.log('🔐 Login - User object:', user);
+    console.log('🔐 Login - Role:', user.role);
+    console.log('🔐 Login - Frontend Role:', user.frontendRole);
+    
     setCurrentUser(user);
     setCurrentPage('dashboard');
   };
@@ -67,6 +74,7 @@ function App() {
     setIsMobileMenuOpen(false);
   };
 
+  // Show loading while initializing
   if (!isInitialized) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -90,14 +98,19 @@ function App() {
     );
   }
 
-  // Check BOTH role field AND frontendRole field
-  const userRole = currentUser.role?.toLowerCase();
-  const frontendRole = currentUser.frontendRole?.toLowerCase();
-  
+  // CRITICAL FIX: Check for Admin, Administrator, OR frontendRole === 'Admin'
   const isAdmin = 
-    userRole === 'admin' || 
-    userRole === 'administrator' ||
-    frontendRole === 'admin';
+    currentUser.role === 'Admin' || 
+    currentUser.role === 'Administrator' || 
+    currentUser.frontendRole === 'Admin';
+
+  console.log('🎯 Dashboard Rendering:', {
+    role: currentUser.role,
+    frontendRole: currentUser.frontendRole,
+    isAdmin: isAdmin,
+    currentPage: currentPage,
+    willRender: isAdmin ? 'AdminDashboard' : 'SupervisorDashboard'
+  });
 
   return (
     <div className="flex min-h-screen bg-slate-50">
@@ -116,11 +129,31 @@ function App() {
           onLogout={handleLogout} 
         />
         <main className="flex-1 p-4 md:p-6 lg:p-8">
-          {currentPage === 'dashboard' && isAdmin && <AdminDashboard />}
-          {currentPage === 'dashboard' && !isAdmin && <SupervisorDashboard onNavigate={handleNavigate} />}
+          {/* FIXED: Dashboard routing based on isAdmin check */}
+          {currentPage === 'dashboard' && isAdmin && (
+            <>
+              <div className="p-3 mb-4 text-green-800 bg-green-100 border border-green-400 rounded">
+                ✅ ADMIN DASHBOARD - Role: {currentUser.role}
+              </div>
+              <AdminDashboard />
+            </>
+          )}
+          
+          {currentPage === 'dashboard' && !isAdmin && (
+            <>
+              <div className="p-3 mb-4 text-blue-800 bg-blue-100 border border-blue-400 rounded">
+                ℹ️ SUPERVISOR DASHBOARD - Role: {currentUser.role}
+              </div>
+              <SupervisorDashboard onNavigate={handleNavigate} />
+            </>
+          )}
+          
+          {/* Admin-only pages */}
           {currentPage === 'site-management' && <SiteManagement />}
           {currentPage === 'user-management' && <UserManagement />}
           {currentPage === 'all-permits' && <AllPermits />}
+          
+          {/* Supervisor/Worker pages */}
           {currentPage === 'create-permit' && <CreatePTW onBack={() => handleNavigate('dashboard')} onSuccess={() => handleNavigate('dashboard')} />}
           {currentPage === 'worker-list' && <WorkerList onBack={() => handleNavigate('dashboard')} />}
         </main>

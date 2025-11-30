@@ -31,8 +31,9 @@ function App() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
 
+  // Load user ONCE on mount
   useEffect(() => {
-    if (isInitialized) return;
+    if (isInitialized) return; // Prevent running multiple times
     
     const token = localStorage.getItem('token') || sessionStorage.getItem('token');
     const userStr = localStorage.getItem('user') || sessionStorage.getItem('user');
@@ -48,11 +49,20 @@ function App() {
     }
     
     setIsInitialized(true);
-  }, [isInitialized]);
+  }, [isInitialized]); // Only run when isInitialized changes
 
   const handleLogin = (user: User) => {
+    console.log('🔐 Login successful - User role:', user.role);
+    
     setCurrentUser(user);
+    
+    // Role-based redirect logic:
+    // - Administrator or Admin role → stays on dashboard (which will show AdminDashboard)
+    // - All other roles → stays on dashboard (which will show SupervisorDashboard)
+    // The actual dashboard component rendering is handled in the main return below
     setCurrentPage('dashboard');
+    
+    console.log('📍 Redirected to dashboard page');
   };
 
   const handleLogout = () => {
@@ -67,6 +77,7 @@ function App() {
     setIsMobileMenuOpen(false);
   };
 
+  // Show loading while initializing
   if (!isInitialized) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -90,14 +101,17 @@ function App() {
     );
   }
 
-  // Check BOTH role field AND frontendRole field
-  const userRole = currentUser.role?.toLowerCase();
-  const frontendRole = currentUser.frontendRole?.toLowerCase();
-  
-  const isAdmin = 
-    userRole === 'admin' || 
-    userRole === 'administrator' ||
-    frontendRole === 'admin';
+  // Check if user is Admin/Administrator - check both role and frontendRole
+  const isAdmin = currentUser.role === 'Admin' || 
+                  currentUser.role === 'Administrator' || 
+                  currentUser.frontendRole === 'Admin';
+
+  console.log('🔍 Dashboard check:', {
+    role: currentUser.role,
+    frontendRole: currentUser.frontendRole,
+    isAdmin: isAdmin,
+    currentPage: currentPage
+  });
 
   return (
     <div className="flex min-h-screen bg-slate-50">
@@ -116,11 +130,16 @@ function App() {
           onLogout={handleLogout} 
         />
         <main className="flex-1 p-4 md:p-6 lg:p-8">
+          {/* Dashboard - Show AdminDashboard for Admin/Administrator, SupervisorDashboard for all others */}
           {currentPage === 'dashboard' && isAdmin && <AdminDashboard />}
           {currentPage === 'dashboard' && !isAdmin && <SupervisorDashboard onNavigate={handleNavigate} />}
+          
+          {/* Admin-only pages */}
           {currentPage === 'site-management' && <SiteManagement />}
           {currentPage === 'user-management' && <UserManagement />}
           {currentPage === 'all-permits' && <AllPermits />}
+          
+          {/* Supervisor/Worker pages */}
           {currentPage === 'create-permit' && <CreatePTW onBack={() => handleNavigate('dashboard')} onSuccess={() => handleNavigate('dashboard')} />}
           {currentPage === 'worker-list' && <WorkerList onBack={() => handleNavigate('dashboard')} />}
         </main>

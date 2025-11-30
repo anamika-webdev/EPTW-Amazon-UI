@@ -1,3 +1,4 @@
+// frontend/src/components/common/Sidebar.tsx
 import { LayoutDashboard, Users, Plus, LogOut, X, Building2, FileText } from 'lucide-react';
 
 interface User {
@@ -28,6 +29,7 @@ export default function Sidebar({
   onMobileMenuClose
 }: SidebarProps) {
   
+  // Get initials for avatar
   const getInitials = (name: string) => {
     return name
       .split(' ')
@@ -37,17 +39,22 @@ export default function Sidebar({
       .slice(0, 2);
   };
 
-  // Check BOTH role field AND frontendRole field (case-insensitive)
-  const userRole = currentUser.role?.toLowerCase();
-  const frontendRole = currentUser.frontendRole?.toLowerCase();
-  
+  // CRITICAL FIX: Check for Admin, Administrator, OR frontendRole === 'Admin'
   const isAdmin = 
-    userRole === 'admin' || 
-    userRole === 'administrator' ||
-    frontendRole === 'admin';
+    currentUser.role === 'Admin' || 
+    currentUser.role === 'Administrator' || 
+    currentUser.frontendRole === 'Admin';
 
+  console.log('🎨 Sidebar:', {
+    role: currentUser.role,
+    frontendRole: currentUser.frontendRole,
+    isAdmin: isAdmin
+  });
+
+  // Determine role-based navigation items
   const getNavigationItems = () => {
     if (isAdmin) {
+      // Admin/Administrator navigation
       return [
         { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
         { id: 'site-management', label: 'Site Management', icon: Building2 },
@@ -55,6 +62,7 @@ export default function Sidebar({
         { id: 'all-permits', label: 'All Permits', icon: FileText },
       ];
     } else {
+      // Supervisor/Other roles navigation
       return [
         { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
         { id: 'worker-list', label: 'Workers', icon: Users },
@@ -66,6 +74,7 @@ export default function Sidebar({
   const navigationItems = getNavigationItems();
 
   const handleNavClick = (pageId: string) => {
+    console.log('📌 Sidebar navigation clicked:', pageId);
     onNavigate(pageId);
     onMobileMenuClose();
   };
@@ -93,6 +102,7 @@ export default function Sidebar({
 
   return (
     <>
+      {/* Mobile backdrop */}
       {isMobileMenuOpen && (
         <div 
           className="fixed inset-0 z-40 bg-black/50 lg:hidden"
@@ -100,17 +110,20 @@ export default function Sidebar({
         />
       )}
 
+      {/* Sidebar */}
       <aside className={`
         fixed top-0 left-0 h-full w-64 bg-white shadow-xl z-50 flex flex-col
         transition-transform duration-300 ease-in-out
         ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
         lg:translate-x-0
       `}>
+        {/* Header */}
         <div className="flex items-center justify-between p-6 border-b">
           <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center h-20 shadow-lg w-60 bg-gradient-to-br from-orange-400 to-orange-400 rounded-xl">
-              <span className="text-3xl font-bold text-white">Amazon EPTW</span>
+            <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600">
+              <span className="text-lg font-bold text-white">E</span>
             </div>
+            <h1 className="text-xl font-bold text-gray-900">EPTW</h1>
           </div>
           <button
             onClick={onMobileMenuClose}
@@ -120,6 +133,7 @@ export default function Sidebar({
           </button>
         </div>
 
+        {/* User profile */}
         <div className="p-6 border-b">
           <div className="flex items-center gap-3">
             <div className="flex items-center justify-center w-12 h-12 text-lg font-semibold text-white rounded-full bg-gradient-to-br from-blue-500 to-indigo-500">
@@ -129,8 +143,8 @@ export default function Sidebar({
               <p className="text-sm font-semibold text-gray-900 truncate">
                 {currentUser.full_name}
               </p>
-              <p className="text-xs text-gray-500 truncate">
-                {currentUser.role}
+              <p className={`text-xs truncate font-medium ${isAdmin ? 'text-blue-600' : 'text-gray-500'}`}>
+                {currentUser.role} {isAdmin && '👑'}
               </p>
               {currentUser.department && (
                 <p className="text-xs text-gray-400 truncate">
@@ -141,12 +155,14 @@ export default function Sidebar({
           </div>
         </div>
 
+        {/* Navigation */}
         <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
           {navigationItems.map((item) => (
             <NavButton key={item.id} item={item} />
           ))}
         </nav>
 
+        {/* Logout button */}
         <div className="p-4 border-t">
           <button
             onClick={onLogout}

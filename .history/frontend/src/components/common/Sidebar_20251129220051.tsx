@@ -108,7 +108,7 @@ export default function Sidebar({
       `}>
         <div className="flex items-center justify-between p-6 border-b">
           <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center h-20 shadow-lg w-60 bg-gradient-to-br from-orange-400 to-orange-400 rounded-xl">
+            <div className="flex items-center justify-center w-40 h-20 shadow-lg bg-gradient-to-br from-orange-400 to-orange-400 rounded-xl">
               <span className="text-3xl font-bold text-white">Amazon EPTW</span>
             </div>
           </div>

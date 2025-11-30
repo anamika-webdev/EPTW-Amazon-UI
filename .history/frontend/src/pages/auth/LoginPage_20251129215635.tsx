@@ -94,7 +94,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
       <div className="w-full max-w-md p-8 space-y-6 bg-white shadow-2xl rounded-2xl">
         <div className="text-center">
           <div className="flex items-center justify-center mb-4">
-            <div className="flex items-center justify-center w-32 h-20 shadow-lg bg-gradient-to-br from-orange-400 to-orange-400 rounded-xl">
+            <div className="flex items-center justify-center w-32 shadow-lg h-19 bg-gradient-to-br from-orange-400 to-orange-400 rounded-xl">
               <span className="text-3xl font-bold text-white">Amazon</span>
             </div>
           </div>

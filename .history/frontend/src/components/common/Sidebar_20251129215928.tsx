@@ -108,9 +108,10 @@ export default function Sidebar({
       `}>
         <div className="flex items-center justify-between p-6 border-b">
           <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center h-20 shadow-lg w-60 bg-gradient-to-br from-orange-400 to-orange-400 rounded-xl">
-              <span className="text-3xl font-bold text-white">Amazon EPTW</span>
+            <div className="flex items-center justify-center w-32 h-20 shadow-lg bg-gradient-to-br from-orange-400 to-orange-400 rounded-xl">
+              <span className="text-3xl font-bold text-white">Amazon</span>
             </div>
+            <h1 className="text-xl font-bold text-gray-900">EPTW</h1>
           </div>
           <button
             onClick={onMobileMenuClose}

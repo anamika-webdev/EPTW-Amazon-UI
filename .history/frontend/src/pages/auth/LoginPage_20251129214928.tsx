@@ -94,8 +94,8 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
       <div className="w-full max-w-md p-8 space-y-6 bg-white shadow-2xl rounded-2xl">
         <div className="text-center">
           <div className="flex items-center justify-center mb-4">
-            <div className="flex items-center justify-center w-32 h-20 shadow-lg bg-gradient-to-br from-orange-400 to-orange-400 rounded-xl">
-              <span className="text-3xl font-bold text-white">Amazon</span>
+            <div className="flex items-center justify-center w-16 h-16 shadow-lg bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl">
+              <span className="text-3xl font-bold text-white">E</span>
             </div>
           </div>
           <h2 className="text-3xl font-bold text-gray-900">Welcome Back</h2>
@@ -174,7 +174,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
           type="button"
           onClick={handleSSOClick}
           disabled={loading}
-          className="w-full px-4 py-3 font-medium text-white transition-all bg-orange-400 border border-gray-300 rounded-lg shadow-sm text-white-700 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full px-4 py-3 font-medium transition-all bg-orange-400 border border-gray-300 rounded-lg shadow-sm text-white-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <span className="flex items-center justify-center ">
             Sign in with SSO
