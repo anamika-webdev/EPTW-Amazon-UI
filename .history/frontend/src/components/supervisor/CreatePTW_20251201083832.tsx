@@ -1733,27 +1733,8 @@ Include:
 
       {/* Signature Modal */}
       {(showSignature || showApproverSignature) && (
-  <div 
-    className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
-    onClick={(e) => {
-      if (e.target === e.currentTarget) {
-        setShowSignature(false);
-        setShowApproverSignature(null);
-      }
-    }}
-  >
-    <div className="relative w-full max-w-2xl p-6 bg-white rounded-xl">
-      {/* X Close Button */}
-      <button
-        type="button"
-        onClick={() => {
-          setShowSignature(false);
-          setShowApproverSignature(null);
-        }}
-        className="absolute p-2 rounded-full top-4 right-4 text-slate-400 hover:text-slate-600 hover:bg-slate-100"
-      >
-        <X className="w-5 h-5" />
-      </button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+          <div className="w-full max-w-2xl p-6 bg-white rounded-xl">
             <h3 className="mb-4 text-lg font-semibold text-slate-900">
               {showApproverSignature 
                 ? `${showApproverSignature === 'areaManager' ? 'Area Manager' : 

@@ -1482,7 +1482,7 @@ Include:
             >
               {approverSignatures.areaManagerSignature ? 'Update' : 'Add'} Digital Signature
             </Button>
-        
+            <span className="text-sm text-slate-500">/ On-screen Keyboard</span>
           </div>
         </div>
       </div>
@@ -1497,6 +1497,9 @@ Include:
       <h3 className="text-lg font-semibold text-slate-900">
         Site Leader / Senior Ops
       </h3>
+      <p className="text-xs text-slate-500">
+        {requiresSiteLeaderApproval ? '⚠️ Required' :}
+      </p>
     </div>
     {approverSignatures.siteLeaderSignature && (
       <span className="flex items-center gap-1 px-3 py-1 text-sm font-medium text-green-700 bg-green-100 rounded-full">
@@ -1545,6 +1548,12 @@ Include:
       <div className="p-6 border-2 rounded-lg border-slate-200">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold text-slate-900">Safety In-charge</h3>
+          {approverSignatures.safetyOfficerSignature && (
+            <span className="flex items-center gap-2 px-3 py-1 text-sm font-medium text-green-700 bg-green-100 rounded-full">
+              <Check className="w-4 h-4" />
+              Signed
+            </span>
+          )}
         </div>
 
         <div className="space-y-4">
@@ -1574,7 +1583,7 @@ Include:
             >
               {approverSignatures.safetyOfficerSignature ? 'Update' : 'Add'} Digital Signature
             </Button>
-    
+            <span className="text-sm text-slate-500">/ On-screen Keyboard</span>
           </div>
         </div>
       </div>
@@ -1622,8 +1631,8 @@ Include:
                 className="bg-white"
               >
                 {approverSignatures.siteLeaderSignature ? 'Update' : 'Add'} Digital Signature
-
               </Button>
+              <span className="text-sm text-red-700">/ On-screen Keyboard (if applicable)</span>
             </div>
           </div>
         </div>
@@ -1733,27 +1742,8 @@ Include:
 
       {/* Signature Modal */}
       {(showSignature || showApproverSignature) && (
-  <div 
-    className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
-    onClick={(e) => {
-      if (e.target === e.currentTarget) {
-        setShowSignature(false);
-        setShowApproverSignature(null);
-      }
-    }}
-  >
-    <div className="relative w-full max-w-2xl p-6 bg-white rounded-xl">
-      {/* X Close Button */}
-      <button
-        type="button"
-        onClick={() => {
-          setShowSignature(false);
-          setShowApproverSignature(null);
-        }}
-        className="absolute p-2 rounded-full top-4 right-4 text-slate-400 hover:text-slate-600 hover:bg-slate-100"
-      >
-        <X className="w-5 h-5" />
-      </button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+          <div className="w-full max-w-2xl p-6 bg-white rounded-xl">
             <h3 className="mb-4 text-lg font-semibold text-slate-900">
               {showApproverSignature 
                 ? `${showApproverSignature === 'areaManager' ? 'Area Manager' : 

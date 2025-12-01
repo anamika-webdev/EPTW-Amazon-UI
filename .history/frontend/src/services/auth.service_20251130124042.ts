@@ -1,4 +1,4 @@
-import api from './api.bak.ts';
+import api from './api.ts.backup';
 import { LoginCredentials, LoginResponse } from '../types/auth.types';
 
 export const authService = {

@@ -599,56 +599,56 @@ export function CreatePTW({ onBack, onSuccess }: CreatePTWProps) {
     onTextChange?: (value: string) => void;
   }
 
-const RequirementRow = ({ questionId, label, value, onChange, isTextInput, textValue, onTextChange }: RequirementRowProps) => {
+  const RequirementRow = ({ questionId, label, value, onChange, isTextInput, textValue, onTextChange }: RequirementRowProps) => {
   if (isTextInput) {
     return (
       <div className="py-3 border-b border-slate-100">
         <Label htmlFor={`text-${questionId}`} className="block mb-2 text-sm font-medium text-slate-700">
           {label} *
         </Label>
-        <input
+        <Input
           id={`text-${questionId}`}
           type="text"
           value={textValue || ''}
           onChange={(e) => {
-            const newValue = e.target.value;
-            console.log('Text input changed:', questionId, newValue);
-            onTextChange?.(newValue);
+            e.preventDefault();
+            e.stopPropagation();
+            onTextChange?.(e.target.value);
           }}
           placeholder="Enter full name..."
-          className="flex w-full h-10 max-w-md px-3 py-2 text-sm bg-white border rounded-md border-slate-200 ring-offset-background placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+          className="max-w-md"
           autoComplete="off"
         />
       </div>
     );
   }
 
-  return (
-    <div className="flex items-center justify-between py-3 border-b border-slate-100">
-      <span className="text-sm text-slate-700">{label}</span>
-      <div className="flex gap-2">
-        {(['Yes', 'No', 'N/A'] as ChecklistResponse[]).map((option) => (
-          <button
-            key={option}
-            type="button"
-            onClick={() => onChange(option)}
-            className={`px-4 py-1.5 text-xs font-medium rounded transition-all ${
-              value === option
-                ? option === 'Yes'
-                  ? 'bg-green-500 text-white'
-                  : option === 'No'
-                  ? 'bg-red-500 text-white'
-                  : 'bg-slate-500 text-white'
-                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-            }`}
-          >
-            {option}
-          </button>
-        ))}
+    return (
+      <div className="flex items-center justify-between py-3 border-b border-slate-100">
+        <span className="text-sm text-slate-700">{label}</span>
+        <div className="flex gap-2">
+          {(['Yes', 'No', 'N/A'] as ChecklistResponse[]).map((option) => (
+            <button
+              key={option}
+              onClick={() => onChange(option)}
+              className={`px-4 py-1.5 text-xs font-medium rounded transition-all ${
+                value === option
+                  ? option === 'Yes'
+                    ? 'bg-green-500 text-white'
+                    : option === 'No'
+                    ? 'bg-red-500 text-white'
+                    : 'bg-slate-500 text-white'
+                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+              }`}
+            >
+              {option}
+            </button>
+          ))}
+        </div>
       </div>
-    </div>
-  );
-};
+    );
+  };
+
   const getCategoryBadgeColor = (category: PermitType) => {
     const colors: Record<PermitType, string> = {
       'General': 'bg-blue-100 text-blue-800 border-blue-300',
@@ -1425,212 +1425,152 @@ Include:
           </div>
         )}
 
-      {/* STEP 6: Enhanced Approvers */}
-{currentStep === 6 && (
-  <div className="space-y-6">
-    <h2 className="text-xl font-semibold text-slate-900">Approver Selection & Signatures</h2>
-    
-    {requiresSiteLeaderApproval && (
-      <div className="flex items-start gap-3 p-4 border-2 border-orange-200 rounded-lg bg-orange-50">
-        <AlertTriangle className="w-5 h-5 text-orange-600 shrink-0 mt-0.5" />
-        <div>
-          <p className="font-semibold text-orange-900">Site Leader / Senior Ops Required</p>
-          <p className="text-sm text-orange-700">
-            High-risk permit requires all three approvers
-          </p>
-        </div>
-      </div>
-    )}
+        {/* STEP 6: Approvers - Keep existing code */}
+        {currentStep === 6 && (
+          <div className="space-y-6">
+            <h2 className="text-xl font-semibold text-slate-900">Approver Selection</h2>
+            <p className="text-sm text-slate-600">
+              Select the approvers who will review and approve this permit
+            </p>
 
-    <div className="space-y-6">
-      {/* Area In-charge */}
-      <div className="p-6 border-2 rounded-lg border-slate-200">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-slate-900">Area In-charge</h3>
-          {approverSignatures.areaManagerSignature && (
-            <span className="flex items-center gap-2 px-3 py-1 text-sm font-medium text-green-700 bg-green-100 rounded-full">
-              <Check className="w-4 h-4" />
-              Signed
-            </span>
-          )}
-        </div>
-
-        <div className="space-y-4">
-          <Select 
-            value={approvers.areaManager.toString()} 
-            onValueChange={(value) => setApprovers({ ...approvers, areaManager: parseInt(value) })}
-          >
-            <SelectTrigger className="bg-white">
-              <SelectValue placeholder="Select Area In-charge" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="0">-- Select --</SelectItem>
-              {areaManagers.map((manager) => (
-                <SelectItem key={manager.id} value={manager.id.toString()}>
-                  {manager.full_name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <div className="flex items-center gap-3 pt-2">
-            <Button
-              type="button"
-              onClick={() => setShowApproverSignature('areaManager')}
-              variant="outline"
-              size="sm"
-            >
-              {approverSignatures.areaManagerSignature ? 'Update' : 'Add'} Digital Signature
-            </Button>
-        
-          </div>
-        </div>
-      </div>
-     {/* Site Leader / Senior Ops - ALWAYS VISIBLE */}
-<div className={`p-6 border-2 rounded-lg ${
-  requiresSiteLeaderApproval 
-    ? 'border-red-300 bg-red-50' 
-    : 'border-slate-200 bg-slate-50'
-}`}>
-  <div className="flex items-center justify-between mb-4">
-    <div>
-      <h3 className="text-lg font-semibold text-slate-900">
-        Site Leader / Senior Ops
-      </h3>
-    </div>
-    {approverSignatures.siteLeaderSignature && (
-      <span className="flex items-center gap-1 px-3 py-1 text-sm font-medium text-green-700 bg-green-100 rounded-full">
-        <Check className="w-4 h-4" />
-        Signed
-      </span>
-    )}
-  </div>
-
-  <div className="space-y-4">
-    <Select 
-      value={approvers.siteLeader.toString()} 
-      onValueChange={(value) => setApprovers({ ...approvers, siteLeader: parseInt(value) })}
-    >
-      <SelectTrigger className="bg-white">
-        <SelectValue placeholder="Choose Site Leader / Senior Ops" />
-      </SelectTrigger>
-      <SelectContent>
-        <SelectItem value="0">-- Select --</SelectItem>
-        {siteLeaders.map((leader) => (
-          <SelectItem key={leader.id} value={leader.id.toString()}>
-            {leader.full_name}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
-
-    {approvers.siteLeader > 0 && (
-      <div className="flex items-center gap-3 p-3 border-t border-slate-200">
-        <Button
-          type="button"
-          onClick={() => setShowApproverSignature('siteLeader')}
-          variant="outline"
-          size="sm"
-          className="gap-2"
-        >
-          <FileText className="w-4 h-4" />
-          Add Digital Signature
-        </Button>
-        
-      </div>
-    )}
-  </div>
-</div>
-      {/* Safety In-charge */}
-      <div className="p-6 border-2 rounded-lg border-slate-200">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-slate-900">Safety In-charge</h3>
-        </div>
-
-        <div className="space-y-4">
-          <Select 
-            value={approvers.safetyOfficer.toString()} 
-            onValueChange={(value) => setApprovers({ ...approvers, safetyOfficer: parseInt(value) })}
-          >
-            <SelectTrigger className="bg-white">
-              <SelectValue placeholder="Select Safety In-charge" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="0">-- Select --</SelectItem>
-              {safetyOfficers.map((officer) => (
-                <SelectItem key={officer.id} value={officer.id.toString()}>
-                  {officer.full_name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <div className="flex items-center gap-3 pt-2">
-            <Button
-              type="button"
-              onClick={() => setShowApproverSignature('safetyOfficer')}
-              variant="outline"
-              size="sm"
-            >
-              {approverSignatures.safetyOfficerSignature ? 'Update' : 'Add'} Digital Signature
-            </Button>
-    
-          </div>
-        </div>
-      </div>
-
-      {/* Site Leader/Senior Ops - Conditional */}
-      {requiresSiteLeaderApproval && (
-        <div className="p-6 border-2 border-red-200 rounded-lg bg-red-50">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h3 className="text-lg font-semibold text-red-900">Site Leader / Senior Ops</h3>
-              <p className="text-sm text-red-600">(Required for high-risk permits)</p>
-            </div>
-            {approverSignatures.siteLeaderSignature && (
-              <span className="flex items-center gap-2 px-3 py-1 text-sm font-medium text-green-700 bg-green-100 rounded-full">
-                <Check className="w-4 h-4" />
-                Signed
-              </span>
+            {requiresSiteLeaderApproval && (
+              <div className="flex items-start gap-3 p-4 border-2 border-orange-200 rounded-lg bg-orange-50">
+                <AlertTriangle className="w-5 h-5 text-orange-600 shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-semibold text-orange-900">High-Risk Permit - Site Leader Required</p>
+                  <p className="text-sm text-orange-700">
+                    This permit requires approval from all three approvers due to multiple high-risk work types.
+                  </p>
+                </div>
+              </div>
             )}
-          </div>
 
-          <div className="space-y-4">
-            <Select 
-              value={approvers.siteLeader.toString()} 
-              onValueChange={(value) => setApprovers({ ...approvers, siteLeader: parseInt(value) })}
-            >
-              <SelectTrigger className="bg-white">
-                <SelectValue placeholder="Select Site Leader / Senior Ops" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="0">-- Select --</SelectItem>
-                {siteLeaders.map((leader) => (
-                  <SelectItem key={leader.id} value={leader.id.toString()}>
-                    {leader.full_name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="space-y-4">
+              {/* Area Manager */}
+              <div>
+                <Label htmlFor="areaManager">Area Manager</Label>
+                <Select 
+                  value={approvers.areaManager.toString()} 
+                  onValueChange={(value) => setApprovers({ ...approvers, areaManager: parseInt(value) })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select Area Manager" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="0">-- Select --</SelectItem>
+                    {areaManagers.map((manager) => (
+                      <SelectItem key={manager.id} value={manager.id.toString()}>
+                        {manager.full_name} ({manager.email})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                
+                <div className="flex items-center gap-4 mt-3">
+                  <Button
+                    type="button"
+                    onClick={() => setShowApproverSignature('areaManager')}
+                    variant="outline"
+                    size="sm"
+                  >
+                    {approverSignatures.areaManagerSignature ? 'Update Signature' : 'Add Digital Signature'}
+                  </Button>
+                  {approverSignatures.areaManagerSignature && (
+                    <span className="flex items-center gap-1 text-sm text-green-600">
+                      <Check className="w-4 h-4" />
+                      Signed
+                    </span>
+                  )}
+                </div>
+              </div>
 
-            <div className="flex items-center gap-3 pt-2">
-              <Button
-                type="button"
-                onClick={() => setShowApproverSignature('siteLeader')}
-                variant="outline"
-                size="sm"
-                className="bg-white"
-              >
-                {approverSignatures.siteLeaderSignature ? 'Update' : 'Add'} Digital Signature
+              {/* Safety Officer */}
+              <div>
+                <Label htmlFor="safetyOfficer">Safety Officer</Label>
+                <Select 
+                  value={approvers.safetyOfficer.toString()} 
+                  onValueChange={(value) => setApprovers({ ...approvers, safetyOfficer: parseInt(value) })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select Safety Officer" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="0">-- Select --</SelectItem>
+                    {safetyOfficers.map((officer) => (
+                      <SelectItem key={officer.id} value={officer.id.toString()}>
+                        {officer.full_name} ({officer.email})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                
+                <div className="flex items-center gap-4 mt-3">
+                  <Button
+                    type="button"
+                    onClick={() => setShowApproverSignature('safetyOfficer')}
+                    variant="outline"
+                    size="sm"
+                  >
+                    {approverSignatures.safetyOfficerSignature ? 'Update Signature' : 'Add Digital Signature'}
+                  </Button>
+                  {approverSignatures.safetyOfficerSignature && (
+                    <span className="flex items-center gap-1 text-sm text-green-600">
+                      <Check className="w-4 h-4" />
+                      Signed
+                    </span>
+                  )}
+                </div>
+              </div>
 
-              </Button>
+              {/* Site Leader */}
+              {requiresSiteLeaderApproval && (
+                <div className="p-4 border-2 border-red-200 rounded-lg bg-red-50">
+                  <Label htmlFor="siteLeader" className="text-red-900">
+                    Site Leader (Required for High-Risk)
+                  </Label>
+                  <Select 
+                    value={approvers.siteLeader.toString()} 
+                    onValueChange={(value) => setApprovers({ ...approvers, siteLeader: parseInt(value) })}
+                  >
+                    <SelectTrigger className="mt-2 bg-white">
+                      <SelectValue placeholder="Select Site Leader" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="0">-- Select --</SelectItem>
+                      {siteLeaders.map((leader) => (
+                        <SelectItem key={leader.id} value={leader.id.toString()}>
+                          {leader.full_name} ({leader.email})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  
+                  <div className="flex items-center gap-4 mt-3">
+                    <Button
+                      type="button"
+                      onClick={() => setShowApproverSignature('siteLeader')}
+                      variant="outline"
+                      size="sm"
+                      className="bg-white"
+                    >
+                      {approverSignatures.siteLeaderSignature ? 'Update Signature' : 'Add Digital Signature'}
+                    </Button>
+                    {approverSignatures.siteLeaderSignature && (
+                      <span className="flex items-center gap-1 text-sm text-green-600">
+                        <Check className="w-4 h-4" />
+                        Signed
+                      </span>
+                    )}
+                  </div>
+                  
+                  <p className="mt-2 text-xs text-red-700">
+                    Site Leader approval is mandatory for permits with 2 or more high-risk work types
+                  </p>
+                </div>
+              )}
             </div>
           </div>
-        </div>
-      )}
-    </div>
-  </div>
-)}
+        )}
 
         {/* STEP 7: Review - Keep existing code */}
         {currentStep === 7 && (
@@ -1733,27 +1673,8 @@ Include:
 
       {/* Signature Modal */}
       {(showSignature || showApproverSignature) && (
-  <div 
-    className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
-    onClick={(e) => {
-      if (e.target === e.currentTarget) {
-        setShowSignature(false);
-        setShowApproverSignature(null);
-      }
-    }}
-  >
-    <div className="relative w-full max-w-2xl p-6 bg-white rounded-xl">
-      {/* X Close Button */}
-      <button
-        type="button"
-        onClick={() => {
-          setShowSignature(false);
-          setShowApproverSignature(null);
-        }}
-        className="absolute p-2 rounded-full top-4 right-4 text-slate-400 hover:text-slate-600 hover:bg-slate-100"
-      >
-        <X className="w-5 h-5" />
-      </button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+          <div className="w-full max-w-2xl p-6 bg-white rounded-xl">
             <h3 className="mb-4 text-lg font-semibold text-slate-900">
               {showApproverSignature 
                 ? `${showApproverSignature === 'areaManager' ? 'Area Manager' : 

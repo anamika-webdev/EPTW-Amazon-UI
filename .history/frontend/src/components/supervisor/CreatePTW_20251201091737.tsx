@@ -1732,45 +1732,51 @@ Include:
       </div>
 
       {/* Signature Modal */}
-      {(showSignature || showApproverSignature) && (
+     {/* Signature Modal - FIXED */}
+{(showSignature || showApproverSignature) && (
   <div 
     className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
     onClick={(e) => {
+      // Close when clicking backdrop
       if (e.target === e.currentTarget) {
         setShowSignature(false);
         setShowApproverSignature(null);
       }
     }}
   >
-    <div className="relative w-full max-w-2xl p-6 bg-white rounded-xl">
-      {/* X Close Button */}
+    <div className="relative w-full max-w-2xl p-6 bg-white shadow-xl rounded-xl">
+      {/* X Close Button - NEW */}
       <button
         type="button"
-        onClick={() => {
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
           setShowSignature(false);
           setShowApproverSignature(null);
         }}
-        className="absolute p-2 rounded-full top-4 right-4 text-slate-400 hover:text-slate-600 hover:bg-slate-100"
+        className="absolute p-2 transition-colors rounded-full top-4 right-4 text-slate-400 hover:text-slate-600 hover:bg-slate-100"
+        aria-label="Close"
       >
         <X className="w-5 h-5" />
       </button>
-            <h3 className="mb-4 text-lg font-semibold text-slate-900">
-              {showApproverSignature 
-                ? `${showApproverSignature === 'areaManager' ? 'Area Manager' : 
-                     showApproverSignature === 'safetyOfficer' ? 'Safety Officer' : 
-                     'Site Leader'} Digital Signature`
-                : 'Issuer Digital Signature'}
-            </h3>
-            <DigitalSignature
-              onSave={handleSignatureSave}
-              onCancel={() => {
-                setShowSignature(false);
-                setShowApproverSignature(null);
-              }}
-            />
-          </div>
-        </div>
-      )}
+
+      <h3 className="mb-4 text-lg font-semibold text-slate-900">
+        {showApproverSignature 
+          ? `${showApproverSignature === 'areaManager' ? 'Area In-charge' : 
+               showApproverSignature === 'safetyOfficer' ? 'Safety In-charge' : 
+               'Site Leader / Senior Ops'} Digital Signature`
+          : 'Issuer Digital Signature'}
+      </h3>
+      <DigitalSignature
+        onSave={handleSignatureSave}
+        onCancel={() => {
+          setShowSignature(false);
+          setShowApproverSignature(null);
+        }}
+      />
+    </div>
+  </div>
+)}
     </div>
   );
 }

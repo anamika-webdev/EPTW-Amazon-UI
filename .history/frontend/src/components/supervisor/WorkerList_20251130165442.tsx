@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { Search, Mail, Phone, User } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
-import { usersAPI } from '../../services/api.bak.ts';
+import { usersAPI } from '../../services/api.ts.bak';
 import type { User as Worker } from '../../types';
 
 interface WorkerListProps {

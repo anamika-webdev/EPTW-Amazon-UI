@@ -1,4 +1,4 @@
-// src/components/supervisor/CreatePTW.tsx - COMPLETE FIXED VERSION
+// src/components/supervisor/CreatePTW.tsx - EXACT REPLICA OF YOUR ORIGINAL
 import { useState, useEffect } from 'react';
 import { ArrowLeft, Upload, FileText, Check, AlertTriangle, X } from 'lucide-react';
 import { Button } from '../ui/button';
@@ -32,7 +32,7 @@ interface CreatePTWProps {
   onSuccess?: () => void;
 }
 
-// FIXED: Professional PPE Icon Component with proper names
+// Professional PPE Icon Component
 const PPEIconComponent = ({ name }: { name: string }) => {
   const icons: Record<string, JSX.Element> = {
     'Safety Helmet': (
@@ -107,7 +107,6 @@ const PPEIconComponent = ({ name }: { name: string }) => {
   return icons[name] || (
     <svg className="w-16 h-16" viewBox="0 0 64 64" fill="none">
       <circle cx="32" cy="32" r="28" stroke="#94A3B8" strokeWidth="2" fill="none"/>
-      <text x="32" y="38" textAnchor="middle" fill="#94A3B8" fontSize="12" fontWeight="bold">PPE</text>
     </svg>
   );
 };
@@ -126,7 +125,7 @@ export function CreatePTW({ onBack, onSuccess }: CreatePTWProps) {
   const [workers, setWorkers] = useState<User[]>([]);
   const [checklistQuestions, setChecklistQuestions] = useState<MasterChecklistQuestion[]>([]);
 
-  // Approvers
+  // Approvers by role
   const [areaManagers, setAreaManagers] = useState<User[]>([]);
   const [safetyOfficers, setSafetyOfficers] = useState<User[]>([]);
   const [siteLeaders, setSiteLeaders] = useState<User[]>([]);
@@ -140,6 +139,7 @@ export function CreatePTW({ onBack, onSuccess }: CreatePTWProps) {
   }>>([]);
   
   const [formData, setFormData] = useState({
+    // Multiple categories
     categories: [] as PermitType[],
     site_id: 0,
     location: '',
@@ -152,38 +152,46 @@ export function CreatePTW({ onBack, onSuccess }: CreatePTWProps) {
     permitInitiator: '',
     permitInitiatorContact: '',
     
+    // Issued To
     issuedToName: '',
     issuedToContact: '',
     
+    // Workers
     selectedWorkers: [] as number[],
     
+    // Hazards & Controls
     selectedHazards: [] as number[],
     controlMeasures: '',
     otherHazards: '',
     
+    // PPE
     selectedPPE: [] as number[],
     
+    // SWMS
     swmsFile: null as File | null,
     swmsText: '',
     swmsMode: 'file' as 'file' | 'text',
     
-    // FIXED: Store signatures as base64 strings directly
+    // Signatures
     issuerSignature: '',
     
+    // Checklist
     checklistResponses: {} as Record<number, ChecklistResponse>,
     checklistRemarks: {} as Record<number, string>,
     checklistTextResponses: {} as Record<number, string>,
     
+    // Declaration
     declaration: false,
   });
 
+  // Approver selection
   const [approvers, setApprovers] = useState({
     areaManager: 0,
     safetyOfficer: 0,
     siteLeader: 0,
   });
 
-  // FIXED: Store signatures directly as base64
+  // Approver signatures
   const [approverSignatures, setApproverSignatures] = useState({
     areaManagerSignature: '',
     safetyOfficerSignature: '',
@@ -192,6 +200,7 @@ export function CreatePTW({ onBack, onSuccess }: CreatePTWProps) {
 
   const [showApproverSignature, setShowApproverSignature] = useState<'areaManager' | 'safetyOfficer' | 'siteLeader' | null>(null);
 
+  // High-risk permit logic
   const highRiskPermits: PermitType[] = ['Hot_Work', 'Confined_Space', 'Electrical', 'Height'];
   const selectedHighRiskCount = formData.categories.filter(cat => highRiskPermits.includes(cat)).length;
   const requiresSiteLeaderApproval = selectedHighRiskCount >= 2;
@@ -199,11 +208,13 @@ export function CreatePTW({ onBack, onSuccess }: CreatePTWProps) {
   const totalSteps = 7;
   const progress = (currentStep / totalSteps) * 100;
 
+  // Load data on mount
   useEffect(() => {
     loadMasterData();
     loadApprovers();
   }, []);
 
+  // Load permit initiator
   useEffect(() => {
     const userStr = localStorage.getItem('user') || sessionStorage.getItem('user');
     if (userStr) {
@@ -220,16 +231,14 @@ export function CreatePTW({ onBack, onSuccess }: CreatePTWProps) {
     }
   }, []);
 
+  // Load checklists on mount
   useEffect(() => {
-    loadCorrectChecklistQuestions();
+    loadAllChecklistQuestions(['General', 'Hot_Work', 'Electrical', 'Height', 'Confined_Space']);
   }, []);
 
-  // FIXED: Load sites correctly
   const loadMasterData = async () => {
     setIsLoading(true);
     try {
-      console.log('🔄 Loading master data...');
-      
       const [sitesRes, hazardsRes, ppeRes, workersRes] = await Promise.all([
         sitesAPI.getAll(),
         masterDataAPI.getHazards(),
@@ -237,33 +246,17 @@ export function CreatePTW({ onBack, onSuccess }: CreatePTWProps) {
         usersAPI.getWorkers(),
       ]);
 
-      console.log('📍 Sites API Response:', sitesRes);
+      console.log('Sites response:', sitesRes);
       
-      // FIXED: Handle sites response correctly
       if (sitesRes.success && sitesRes.data) {
-        console.log('✅ Sites loaded:', sitesRes.data);
-        setSites(Array.isArray(sitesRes.data) ? sitesRes.data : []);
-      } else {
-        console.warn('⚠️ Sites not loaded, response:', sitesRes);
-        setSites([]);
+        console.log('Setting sites:', sitesRes.data);
+        setSites(sitesRes.data);
       }
-      
-      if (hazardsRes.success && hazardsRes.data) {
-        console.log('✅ Hazards loaded:', hazardsRes.data.length);
-        setHazards(hazardsRes.data);
-      }
-      
-      if (ppeRes.success && ppeRes.data) {
-        console.log('✅ PPE loaded:', ppeRes.data.length);
-        setPPEItems(ppeRes.data);
-      }
-      
-      if (workersRes.success && workersRes.data) {
-        console.log('✅ Workers loaded:', workersRes.data.length);
-        setWorkers(workersRes.data);
-      }
+      if (hazardsRes.success && hazardsRes.data) setHazards(hazardsRes.data);
+      if (ppeRes.success && ppeRes.data) setPPEItems(ppeRes.data);
+      if (workersRes.success && workersRes.data) setWorkers(workersRes.data);
     } catch (error) {
-      console.error('❌ Error loading master data:', error);
+      console.error('Error loading master data:', error);
       alert('Failed to load form data. Please refresh the page.');
     } finally {
       setIsLoading(false);
@@ -273,103 +266,123 @@ export function CreatePTW({ onBack, onSuccess }: CreatePTWProps) {
   const loadApprovers = async () => {
     try {
       const [amRes, soRes, slRes] = await Promise.all([
-        usersAPI.getApprovers('Approver_AreaManager'),
-        usersAPI.getApprovers('Approver_Safety'),
-        usersAPI.getApprovers('Approver_SiteLeader'),
+        usersAPI.getAll(),
+        usersAPI.getAll(),
+        usersAPI.getAll(),
       ]);
 
-      if (amRes.success && amRes.data) setAreaManagers(amRes.data);
-      if (soRes.success && soRes.data) setSafetyOfficers(soRes.data);
-      if (slRes.success && slRes.data) setSiteLeaders(slRes.data);
+      if (amRes.success && amRes.data) {
+        setAreaManagers(amRes.data.filter((u: User) => u.role === 'Approver_AreaManager'));
+        setSafetyOfficers(amRes.data.filter((u: User) => u.role === 'Approver_Safety'));
+        setSiteLeaders(amRes.data.filter((u: User) => u.role === 'Admin'));
+      }
     } catch (error) {
       console.error('Error loading approvers:', error);
     }
   };
 
-  // FIXED: Correct checklist questions as per your requirements
-  const loadCorrectChecklistQuestions = () => {
-    const correctQuestions: Record<PermitType, Array<{question: string; isTextInput: boolean}>> = {
-      'General': [
-        { question: 'Job Location has been checked and verified to conduct the activity.', isTextInput: false },
-        { question: 'Area has been barricaded to eliminate the possibilities of unauthorized entry.', isTextInput: false },
-        { question: 'Caution board has been displayed.', isTextInput: false },
-        { question: "PPE's available as per job requirement.", isTextInput: false },
-        { question: 'Information of work has been communicated to the affected team.', isTextInput: false },
-        { question: 'Tools to be inspected for safe use.', isTextInput: false },
-      ],
-      'Hot_Work': [
-        { question: 'No hot work to be carried out at site during fire impairment.', isTextInput: false },
-        { question: 'Area barricade.', isTextInput: false },
-        { question: 'Authorize/Certified welder', isTextInput: false },
-        { question: 'Area clearance of 11mt', isTextInput: false },
-        { question: 'Fire Blanket availability', isTextInput: false },
-        { question: 'Fire Extinguisher availability (CO2/DCP)', isTextInput: false },
-        { question: 'No flammable and combustible material in the vicinity of hot work', isTextInput: false },
-        { question: 'Welding machine earthing to be ensured', isTextInput: false },
-        { question: 'Face shield, welding gloves, apron must be provided to welder.', isTextInput: false },
-        { question: 'Cable condition to be checked.', isTextInput: false },
-        { question: 'Fire watcher/fire fighter/first aider/AED certified person availability', isTextInput: false },
-      ],
-      'Electrical': [
-        { question: 'Area Barricade', isTextInput: false },
-        { question: 'Wiremen License', isTextInput: false },
-        { question: 'Supervisory License', isTextInput: false },
-        { question: 'Approved "A" class contractor.', isTextInput: false },
-        { question: "Electrical approved PPE's", isTextInput: false },
-        { question: 'De-energized of electrical equipment.', isTextInput: false },
-        { question: 'LOTO', isTextInput: false },
-        { question: 'Fire fighter/first aider/AED certified person availability', isTextInput: false },
-        { question: 'Insulated tools provided.', isTextInput: false },
-      ],
-      'Height': [
-        { question: 'Area Barricade', isTextInput: false },
-        { question: 'Vertigo (Height Phobia)/Acrophobic', isTextInput: false },
-        { question: 'Pre use inspection of scaffolding/full body harness/ A type ladder / FRP ladder/ Scissor lift/Boom lift/Hydra/Crane.', isTextInput: false },
-        { question: 'TPI certificate lifting tools and tackles', isTextInput: false },
-        { question: "PPE's must be inspected and certified.", isTextInput: false },
-        { question: 'Anchorage point availability', isTextInput: false },
-        { question: 'Rescue plan available.', isTextInput: false },
-        { question: 'Supervision available.', isTextInput: false },
-        { question: 'Bottom support of ladders/scaffolding to be available.', isTextInput: false },
-      ],
-      'Confined_Space': [
-        { question: 'Area Barricade', isTextInput: false },
-        { question: 'Person NOT Claustrophobic', isTextInput: false },
-        { question: 'Confined Space Number & Name', isTextInput: false },
-        { question: 'LEL Checking', isTextInput: false },
-        { question: 'Flameproof handlamp provided (if requirement)', isTextInput: false },
-        { question: 'Force air ventilation provided (if required)', isTextInput: false },
-        { question: 'O2 Level (19.5 To 23.5%)', isTextInput: false },
-        { question: 'CO & H2S Value', isTextInput: false },
-        { question: 'Tripod stand availability.', isTextInput: false },
-        { question: 'Service/Area and energy isolation', isTextInput: false },
-        { question: 'Mechanical equipment lockout', isTextInput: false },
-        { question: 'Rescue plan available', isTextInput: false },
-        { question: 'GFCI provided for electrical tools', isTextInput: false },
-        { question: 'Entrant name', isTextInput: true },
-        { question: 'Attendant name', isTextInput: true },
-        { question: 'Supervisor name', isTextInput: true },
-        { question: 'Stand-by person name', isTextInput: true },
-      ],
-    };
-
-    const allQuestions: MasterChecklistQuestion[] = [];
-    let idCounter = 1;
-
-    (['General', 'Hot_Work', 'Electrical', 'Height', 'Confined_Space'] as PermitType[]).forEach(category => {
-      correctQuestions[category].forEach(({ question, isTextInput }) => {
-        allQuestions.push({
-          id: idCounter++,
-          permit_type: category,
-          question_text: question,
-          is_mandatory: true,
-          response_type: isTextInput ? 'text' : 'radio'
-        });
-      });
-    });
-
-    console.log('✅ Loaded correct checklist questions:', allQuestions.length);
-    setChecklistQuestions(allQuestions);
+  const loadAllChecklistQuestions = async (categories: PermitType[]) => {
+    try {
+      const allQuestions: MasterChecklistQuestion[] = [];
+      
+      const comprehensiveQuestions: Record<PermitType, string[]> = {
+        'General': [
+          'Job Location has been checked and verified to conduct the activity.',
+          'Area has been barricaded to eliminate the possibilities of unauthorized entry.',
+          'Caution board has been displayed.',
+          "PPE's available as per job requirement.",
+          'Information of work has been communicated to the affected team.',
+          'Tools to be inspected for safe use.',
+        ],
+        'Hot_Work': [
+          'No hot work to be carried out at site during fire impairment.',
+          'Area barricade.',
+          'Authorize/Certified welder',
+          'Area clearance of 11mt',
+          'Fire Blanket availability',
+          'Fire Extinguisher availability (CO2/DCP)',
+          'No flammable and combustible material in the vicinity of hot work',
+          'Welding machine earthing to be ensured',
+          'Face shield, welding gloves, apron must be provided to welder.',
+          'Cable condition to be checked.',
+          'Fire watcher/fire fighter/first aider/AED certified person availability',
+        ],
+        'Electrical': [
+          'Area Barricade',
+          'Wiremen License',
+          'Supervisory License',
+          'Approved "A" class contractor.',
+          "Electrical approved PPE's",
+          'De-energized of electrical equipment.',
+          'LOTO',
+          'Fire fighter/first aider/AED certified person availability',
+          'Insulated tools provided.',
+        ],
+        'Height': [
+          'Area Barricade',
+          'Vertigo (Height Phobia)/Acrophobic',
+          'Pre use inspection of scaffolding/full body harness/ A type ladder / FRP ladder/ Scissor lift/Boom lift/Hydra/Crane.',
+          'TPI certificate lifting tools and tackles',
+          "PPE's must be inspected and certified.",
+          'Anchorage point availability',
+          'Rescue plan available.',
+          'Supervision available.',
+          'Bottom support of ladders/scaffolding to be available.',
+        ],
+        'Confined_Space': [
+          'Area Barricade',
+          'Person NOT Claustrophobic',
+          'Confined Space Number & Name',
+          'LEL Checking',
+          'Flameproof handlamp provided (if requirement)',
+          'Force air ventilation provided (if required)',
+          'O2 Level (19.5 To 23.5%)',
+          'CO & H2S Value',
+          'Tripod stand availability.',
+          'Service/Area and energy isolation',
+          'Mechanical equipment lockout',
+          'Rescue plan available',
+          'GFCI provided for electrical tools',
+          'Entrant name',
+          'Attendant name',
+          'Supervisor name',
+          'Stand-by person name',
+        ],
+      };
+      
+      for (const category of categories) {
+        try {
+          const response = await masterDataAPI.getChecklistQuestions(category);
+          if (response.success && response.data && response.data.length > 0) {
+            allQuestions.push(...response.data);
+          } else {
+            console.log(`Using fallback checklist for ${category}`);
+            const fallbackQuestions = (comprehensiveQuestions[category] || []).map((q, index) => ({
+              id: parseInt(`${category.charCodeAt(0)}${index + 1}`),
+              permit_type: category,
+              question_text: q,
+              is_mandatory: true,
+              response_type: q.toLowerCase().includes('name') ? 'text' : 'radio'
+            }));
+            allQuestions.push(...fallbackQuestions);
+          }
+        } catch (error) {
+          console.log(`Error loading ${category} checklist, using fallback`);
+          const fallbackQuestions = (comprehensiveQuestions[category] || []).map((q, index) => ({
+            id: parseInt(`${category.charCodeAt(0)}${index + 1}`),
+            permit_type: category,
+            question_text: q,
+            is_mandatory: true,
+            response_type: q.toLowerCase().includes('name') ? 'text' : 'radio'
+          }));
+          allQuestions.push(...fallbackQuestions);
+        }
+      }
+      
+      setChecklistQuestions(allQuestions);
+    } catch (error) {
+      console.error('Error loading checklist questions:', error);
+    }
   };
 
   const toggleCategory = (category: PermitType) => {
@@ -410,13 +423,9 @@ export function CreatePTW({ onBack, onSuccess }: CreatePTWProps) {
     try {
       let swmsUrl = '';
       if (formData.swmsFile) {
-        try {
-          const uploadRes = await uploadAPI.uploadSWMS(formData.swmsFile);
-          if (uploadRes.success && uploadRes.data) {
-            swmsUrl = uploadRes.data.url;
-          }
-        } catch (uploadError) {
-          console.warn('SWMS upload failed, continuing without file:', uploadError);
+        const uploadRes = await uploadAPI.uploadSWMS(formData.swmsFile);
+        if (uploadRes.success && uploadRes.data) {
+          swmsUrl = uploadRes.data.url;
         }
       }
 
@@ -481,19 +490,17 @@ export function CreatePTW({ onBack, onSuccess }: CreatePTWProps) {
         area_manager_id: approvers.areaManager || null,
         safety_officer_id: approvers.safetyOfficer || null,
         site_leader_id: requiresSiteLeaderApproval ? (approvers.siteLeader || null) : null,
-        // FIXED: Send signatures as base64
-        issuer_signature: formData.issuerSignature || null,
         area_manager_signature: approverSignatures.areaManagerSignature || null,
         safety_officer_signature: approverSignatures.safetyOfficerSignature || null,
         site_leader_signature: approverSignatures.siteLeaderSignature || null,
       };
 
-      console.log('📤 Submitting permit data:', permitData);
+      console.log('Submitting permit data:', permitData);
 
       const response = await permitsAPI.create(permitData);
 
       if (response.success) {
-        alert('✅ PTW Created Successfully!');
+        alert('PTW Created Successfully!');
         if (onSuccess) {
           onSuccess();
         } else {
@@ -503,7 +510,7 @@ export function CreatePTW({ onBack, onSuccess }: CreatePTWProps) {
         alert(response.message || 'Failed to create PTW');
       }
     } catch (error: any) {
-      console.error('❌ Error creating PTW:', error);
+      console.error('Error creating PTW:', error);
       alert(error.response?.data?.message || 'Failed to create PTW. Please try again.');
     } finally {
       setIsSubmitting(false);
@@ -535,29 +542,26 @@ export function CreatePTW({ onBack, onSuccess }: CreatePTWProps) {
     }
   };
 
-  // FIXED: Save signatures directly as base64 without upload
-  const handleSignatureSave = (signature: string) => {
-    console.log('💾 Saving signature:', signature ? 'Signature captured' : 'No signature');
-    
-    if (showApproverSignature) {
-      // Save approver signature
-      setApproverSignatures(prev => {
-        const updated = {
-          ...prev,
-          [`${showApproverSignature}Signature`]: signature
-        };
-        console.log('✅ Approver signatures updated:', updated);
-        return updated;
-      });
-      setShowApproverSignature(null);
-    } else {
-      // Save issuer signature
-      setFormData(prev => {
-        const updated = { ...prev, issuerSignature: signature };
-        console.log('✅ Issuer signature saved');
-        return updated;
-      });
-      setShowSignature(false);
+  const handleSignatureSave = async (signature: string) => {
+    try {
+      const blob = await fetch(signature).then(r => r.blob());
+      const file = new File([blob], `signature_${Date.now()}.png`, { type: 'image/png' });
+      const uploadRes = await uploadAPI.uploadSignature(file);
+      
+      if (uploadRes.success && uploadRes.data) {
+        if (showApproverSignature) {
+          setApproverSignatures(prev => ({
+            ...prev,
+            [`${showApproverSignature}Signature`]: uploadRes.data.url
+          }));
+          setShowApproverSignature(null);
+        } else {
+          setFormData({ ...formData, issuerSignature: uploadRes.data.url });
+          setShowSignature(false);
+        }
+      }
+    } catch (error) {
+      console.error('Error uploading signature:', error);
     }
   };
 
@@ -599,56 +603,56 @@ export function CreatePTW({ onBack, onSuccess }: CreatePTWProps) {
     onTextChange?: (value: string) => void;
   }
 
-const RequirementRow = ({ questionId, label, value, onChange, isTextInput, textValue, onTextChange }: RequirementRowProps) => {
-  if (isTextInput) {
+  const RequirementRow = ({ questionId, label, value, onChange, isTextInput, textValue, onTextChange }: RequirementRowProps) => {
+    const requiresTextInput = isTextInput || 
+      label.toLowerCase().includes('entrant name') ||
+      label.toLowerCase().includes('attendant name') ||
+      label.toLowerCase().includes('supervisor name') ||
+      label.toLowerCase().includes('stand-by person name');
+
+    if (requiresTextInput) {
+      return (
+        <div className="py-3 border-b border-slate-100">
+          <Label htmlFor={`text-${questionId}`} className="block mb-2 text-sm text-slate-700">
+            {label}
+          </Label>
+          <Input
+            id={`text-${questionId}`}
+            value={textValue || ''}
+            onChange={(e) => onTextChange?.(e.target.value)}
+            placeholder="Enter name..."
+            className="max-w-md"
+          />
+        </div>
+      );
+    }
+
     return (
-      <div className="py-3 border-b border-slate-100">
-        <Label htmlFor={`text-${questionId}`} className="block mb-2 text-sm font-medium text-slate-700">
-          {label} *
-        </Label>
-        <input
-          id={`text-${questionId}`}
-          type="text"
-          value={textValue || ''}
-          onChange={(e) => {
-            const newValue = e.target.value;
-            console.log('Text input changed:', questionId, newValue);
-            onTextChange?.(newValue);
-          }}
-          placeholder="Enter full name..."
-          className="flex w-full h-10 max-w-md px-3 py-2 text-sm bg-white border rounded-md border-slate-200 ring-offset-background placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-          autoComplete="off"
-        />
+      <div className="flex items-center justify-between py-3 border-b border-slate-100">
+        <span className="text-sm text-slate-700">{label}</span>
+        <div className="flex gap-2">
+          {(['Yes', 'No', 'N/A'] as ChecklistResponse[]).map((option) => (
+            <button
+              key={option}
+              onClick={() => onChange(option)}
+              className={`px-4 py-1.5 text-xs font-medium rounded transition-all ${
+                value === option
+                  ? option === 'Yes'
+                    ? 'bg-green-500 text-white'
+                    : option === 'No'
+                    ? 'bg-red-500 text-white'
+                    : 'bg-slate-500 text-white'
+                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+              }`}
+            >
+              {option}
+            </button>
+          ))}
+        </div>
       </div>
     );
-  }
+  };
 
-  return (
-    <div className="flex items-center justify-between py-3 border-b border-slate-100">
-      <span className="text-sm text-slate-700">{label}</span>
-      <div className="flex gap-2">
-        {(['Yes', 'No', 'N/A'] as ChecklistResponse[]).map((option) => (
-          <button
-            key={option}
-            type="button"
-            onClick={() => onChange(option)}
-            className={`px-4 py-1.5 text-xs font-medium rounded transition-all ${
-              value === option
-                ? option === 'Yes'
-                  ? 'bg-green-500 text-white'
-                  : option === 'No'
-                  ? 'bg-red-500 text-white'
-                  : 'bg-slate-500 text-white'
-                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-            }`}
-          >
-            {option}
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-};
   const getCategoryBadgeColor = (category: PermitType) => {
     const colors: Record<PermitType, string> = {
       'General': 'bg-blue-100 text-blue-800 border-blue-300',
@@ -694,6 +698,20 @@ const RequirementRow = ({ questionId, label, value, onChange, isTextInput, textV
         {currentStep === 1 && (
           <div className="space-y-6">
             <h2 className="text-xl font-semibold text-slate-900">Basic Information</h2>
+            
+            {/* Testing Mode Notice */}
+            <div className="p-4 border-2 rounded-lg border-amber-200 bg-amber-50">
+              <div className="flex items-start gap-3">
+                <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-semibold text-amber-900">Testing Mode Enabled</p>
+                  <p className="text-sm text-amber-700">
+                    Validation is relaxed for frontend testing. Most fields are optional. 
+                    Only permit category selection is required to proceed.
+                  </p>
+                </div>
+              </div>
+            </div>
             
             {/* Permit Initiator */}
             <div className="p-4 border-2 border-green-200 rounded-lg bg-green-50">
@@ -795,63 +813,49 @@ const RequirementRow = ({ questionId, label, value, onChange, isTextInput, textV
               )}
             </div>
 
-            {/* FIXED: Site Selection with proper display */}
-            {/* Site Selection - FIXED VERSION */}
-<div className="grid gap-4 md:grid-cols-2">
-  <div>
-    <Label htmlFor="site">Site *</Label>
-    <Select 
-      value={formData.site_id.toString()} 
-      onValueChange={(value) => {
-        const siteId = parseInt(value);
-        console.log('📍 Site selected - ID:', siteId);
-        const selectedSite = sites.find(s => s.id === siteId);
-        console.log('📍 Selected site:', selectedSite);
-        setFormData({ ...formData, site_id: siteId });
-      }}
-    >
-      <SelectTrigger>
-        <SelectValue placeholder={sites.length > 0 ? "Select site" : "Loading sites..."} />
-      </SelectTrigger>
-      <SelectContent>
-        {sites.length > 0 ? (
-          sites.map((site) => (
-            <SelectItem key={site.id} value={site.id.toString()}>
-              {site.site_name || site.name || `Site ${site.id}`}
-              {site.site_code ? ` (${site.site_code})` : ''}
-            </SelectItem>
-          ))
-        ) : (
-          <SelectItem value="0" disabled>
-            No sites available - Please add sites in Admin panel
-          </SelectItem>
-        )}
-      </SelectContent>
-    </Select>
-    
-    {/* Status Indicator */}
-    {sites.length > 0 ? (
-      <p className="flex items-center gap-1 mt-2 text-xs text-green-600">
-        <Check className="w-3 h-3" />
-        {sites.length} site(s) loaded
-      </p>
-    ) : (
-      <p className="flex items-center gap-1 mt-2 text-xs text-amber-600">
-        <AlertTriangle className="w-3 h-3" />
-        No sites found. Add sites in Admin &gt; Site Management
-      </p>
-    )}
-  </div>
-  <div>
-    <Label htmlFor="location">Location</Label>
-    <Input
-      id="location"
-      value={formData.location}
-      onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-      placeholder="e.g., Building A, Floor 3"
-    />
-  </div>
-</div>
+            {/* Site Selection */}
+            <div className="grid gap-4 md:grid-cols-2">
+              <div>
+                <Label htmlFor="site">Site (Optional - Backend Issue)</Label>
+                <Select 
+                  value={formData.site_id.toString()} 
+                  onValueChange={(value) => {
+                    console.log('Site selected:', value);
+                    setFormData({ ...formData, site_id: parseInt(value) });
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select site (or skip for testing)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="0">-- Skip Site Selection (Testing) --</SelectItem>
+                    {sites.length === 0 ? (
+                      <SelectItem value="1">Default Test Site</SelectItem>
+                    ) : (
+                      sites.map((site) => (
+                        <SelectItem key={site.id} value={site.id.toString()}>
+                          {site.site_name}
+                        </SelectItem>
+                      ))
+                    )}
+                  </SelectContent>
+                </Select>
+                {sites.length === 0 && (
+                  <p className="mt-1 text-xs text-amber-600">
+                    ⚠️ Sites not loaded from backend. Using test mode. Fix backend/sites API later.
+                  </p>
+                )}
+              </div>
+              <div>
+                <Label htmlFor="location">Location</Label>
+                <Input
+                  id="location"
+                  value={formData.location}
+                  onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                  placeholder="e.g., Building A, Floor 3 (optional for testing)"
+                />
+              </div>
+            </div>
 
             {/* Issue Department */}
             <div>
@@ -860,8 +864,11 @@ const RequirementRow = ({ questionId, label, value, onChange, isTextInput, textV
                 id="issueDepartment"
                 value={formData.issueDepartment}
                 onChange={(e) => setFormData({ ...formData, issueDepartment: e.target.value })}
-                placeholder="e.g., Maintenance, Operations, Engineering"
+                placeholder="e.g., Maintenance, Operations, Engineering (optional for testing)"
               />
+              <p className="mt-1 text-xs text-slate-500">
+                Enter the department that is issuing this permit
+              </p>
             </div>
 
             {/* Work Description */}
@@ -871,7 +878,7 @@ const RequirementRow = ({ questionId, label, value, onChange, isTextInput, textV
                 id="workDescription"
                 value={formData.workDescription}
                 onChange={(e) => setFormData({ ...formData, workDescription: e.target.value })}
-                placeholder="Describe the work to be performed..."
+                placeholder="Describe the work to be performed... (optional for testing)"
                 rows={4}
               />
             </div>
@@ -940,7 +947,7 @@ const RequirementRow = ({ questionId, label, value, onChange, isTextInput, textV
           </div>
         )}
 
-        {/* STEP 2: Issued To & Workers - Keep existing code */}
+        {/* STEP 2: Issued To & Workers */}
         {currentStep === 2 && (
           <div className="space-y-6">
             <h2 className="text-xl font-semibold text-slate-900">Issued To & Workers Assignment</h2>
@@ -952,12 +959,12 @@ const RequirementRow = ({ questionId, label, value, onChange, isTextInput, textV
               </h3>
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
-                  <Label htmlFor="issuedToName">Vendor Name *</Label>
+                  <Label htmlFor="issuedToName">Name *</Label>
                   <Input
                     id="issuedToName"
                     value={formData.issuedToName}
                     onChange={(e) => setFormData({ ...formData, issuedToName: e.target.value })}
-                    placeholder="e.g., XYZ pvt ltd."
+                    placeholder="e.g., John Doe"
                     className="bg-white"
                   />
                 </div>
@@ -998,37 +1005,33 @@ const RequirementRow = ({ questionId, label, value, onChange, isTextInput, textV
               {workerSelectionMode === 'existing' && (
                 <div className="p-4 overflow-y-auto border rounded-lg border-slate-200 max-h-96">
                   <div className="space-y-2">
-                    {workers.length > 0 ? (
-                      workers.map((worker) => (
-                        <label
-                          key={worker.id}
-                          className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer border-slate-200 hover:bg-slate-50"
-                        >
-                          <Checkbox
-                            checked={formData.selectedWorkers.includes(worker.id)}
-                            onCheckedChange={(checked) => {
-                              if (checked) {
-                                setFormData(prev => ({
-                                  ...prev,
-                                  selectedWorkers: [...prev.selectedWorkers, worker.id]
-                                }));
-                              } else {
-                                setFormData(prev => ({
-                                  ...prev,
-                                  selectedWorkers: prev.selectedWorkers.filter(id => id !== worker.id)
-                                }));
-                              }
-                            }}
-                          />
-                          <div className="flex-1">
-                            <p className="text-sm font-medium text-slate-900">{worker.full_name}</p>
-                            <p className="text-xs text-slate-500">{worker.email}</p>
-                          </div>
-                        </label>
-                      ))
-                    ) : (
-                      <p className="text-sm text-center text-slate-500">No workers available. Please add new workers below.</p>
-                    )}
+                    {workers.map((worker) => (
+                      <label
+                        key={worker.id}
+                        className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer border-slate-200 hover:bg-slate-50"
+                      >
+                        <Checkbox
+                          checked={formData.selectedWorkers.includes(worker.id)}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              setFormData(prev => ({
+                                ...prev,
+                                selectedWorkers: [...prev.selectedWorkers, worker.id]
+                              }));
+                            } else {
+                              setFormData(prev => ({
+                                ...prev,
+                                selectedWorkers: prev.selectedWorkers.filter(id => id !== worker.id)
+                              }));
+                            }
+                          }}
+                        />
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-slate-900">{worker.full_name}</p>
+                          <p className="text-xs text-slate-500">{worker.email}</p>
+                        </div>
+                      </label>
+                    ))}
                   </div>
                 </div>
               )}
@@ -1115,7 +1118,7 @@ const RequirementRow = ({ questionId, label, value, onChange, isTextInput, textV
           </div>
         )}
 
-        {/* STEP 3: Hazards - Keep existing code */}
+        {/* STEP 3: Hazards */}
         {currentStep === 3 && (
           <div className="space-y-6">
             <h2 className="text-xl font-semibold text-slate-900">Hazard Identification & Control Measures</h2>
@@ -1208,7 +1211,7 @@ const RequirementRow = ({ questionId, label, value, onChange, isTextInput, textV
 
             <div className="p-4 border-2 border-blue-200 rounded-lg bg-blue-50">
               <p className="mb-2 text-sm font-semibold text-blue-900">
-                Note:
+                📋 Important Note:
               </p>
               <p className="text-sm text-blue-800">
                 Describe all safety measures, procedures, and precautions to be taken
@@ -1217,7 +1220,7 @@ const RequirementRow = ({ questionId, label, value, onChange, isTextInput, textV
           </div>
         )}
 
-        {/* STEP 4: PPE & SWMS - FIXED with visible icons */}
+        {/* STEP 4: PPE & SWMS */}
         {currentStep === 4 && (
           <div className="space-y-6">
             <h2 className="text-xl font-semibold text-slate-900">PPE Requirements & SWMS Upload</h2>
@@ -1226,42 +1229,78 @@ const RequirementRow = ({ questionId, label, value, onChange, isTextInput, textV
               <Label>Required Personal Protective Equipment (PPE) *</Label>
               <p className="mb-4 text-sm text-slate-500">Select all required PPE for this work</p>
               
-              <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-                {['Safety Helmet', 'Safety Vest', 'Safety Gloves', 'Safety Boots', 'Safety Goggles', 'Face Mask', 'Ear Protection', 'Safety Harness'].map((ppeName, index) => (
-                  <button
-                    key={index}
-                    type="button"
-                    onClick={() => {
-                      const mockId = index + 1;
-                      setFormData(prev => ({
-                        ...prev,
-                        selectedPPE: prev.selectedPPE.includes(mockId)
-                          ? prev.selectedPPE.filter(id => id !== mockId)
-                          : [...prev.selectedPPE, mockId]
-                      }));
-                    }}
-                    className={`flex flex-col items-center gap-3 p-6 border-2 rounded-xl transition-all hover:shadow-lg ${
-                      formData.selectedPPE.includes(index + 1)
-                        ? 'border-blue-500 bg-blue-50 shadow-md scale-105'
-                        : 'border-slate-200 hover:border-blue-300 bg-white'
-                    }`}
-                  >
-                    <div className="transition-transform">
-                      <PPEIconComponent name={ppeName} />
-                    </div>
-                    <span className={`text-sm font-semibold text-center ${
-                      formData.selectedPPE.includes(index + 1) ? 'text-blue-900' : 'text-slate-700'
-                    }`}>
-                      {ppeName}
-                    </span>
-                    {formData.selectedPPE.includes(index + 1) && (
-                      <div className="flex items-center justify-center w-8 h-8 bg-blue-600 rounded-full shadow-sm">
-                        <Check className="w-5 h-5 text-white" />
+              {ppeItems.length === 0 ? (
+                <div className="p-8 text-center border-2 border-dashed rounded-lg border-slate-200 bg-slate-50">
+                  <p className="mb-4 text-slate-600">No PPE items loaded from backend. Using default PPE list.</p>
+                  <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+                    {['Safety Helmet', 'Safety Vest', 'Safety Gloves', 'Safety Boots', 'Safety Goggles', 'Face Mask', 'Ear Protection', 'Safety Harness'].map((ppeName, index) => (
+                      <button
+                        key={index}
+                        type="button"
+                        onClick={() => {
+                          const mockId = index + 1;
+                          setFormData(prev => ({
+                            ...prev,
+                            selectedPPE: prev.selectedPPE.includes(mockId)
+                              ? prev.selectedPPE.filter(id => id !== mockId)
+                              : [...prev.selectedPPE, mockId]
+                          }));
+                        }}
+                        className={`flex flex-col items-center gap-3 p-6 border-2 rounded-xl transition-all hover:shadow-lg ${
+                          formData.selectedPPE.includes(index + 1)
+                            ? 'border-blue-500 bg-blue-50 shadow-md scale-105'
+                            : 'border-slate-200 hover:border-blue-300 bg-white'
+                        }`}
+                      >
+                        <div className="transition-transform">
+                          <PPEIconComponent name={ppeName} />
+                        </div>
+                        <span className={`text-sm font-semibold text-center ${
+                          formData.selectedPPE.includes(index + 1) ? 'text-blue-900' : 'text-slate-700'
+                        }`}>
+                          {ppeName}
+                        </span>
+                        {formData.selectedPPE.includes(index + 1) && (
+                          <div className="flex items-center justify-center w-8 h-8 bg-blue-600 rounded-full shadow-sm">
+                            <Check className="w-5 h-5 text-white" />
+                          </div>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+                  {ppeItems.map((ppe) => (
+                    <button
+                      key={ppe.id}
+                      type="button"
+                      onClick={() => togglePPE(ppe.id)}
+                      className={`flex flex-col items-center gap-3 p-6 border-2 rounded-xl transition-all hover:shadow-lg ${
+                        formData.selectedPPE.includes(ppe.id)
+                          ? 'border-blue-500 bg-blue-50 shadow-md scale-105'
+                          : 'border-slate-200 hover:border-blue-300 bg-white'
+                      }`}
+                    >
+                      <div className="transition-transform">
+                        <PPEIconComponent name={ppe.ppe_name} />
                       </div>
-                    )}
-                  </button>
-                ))}
-              </div>
+                      
+                      <span className={`text-sm font-semibold text-center ${
+                        formData.selectedPPE.includes(ppe.id) ? 'text-blue-900' : 'text-slate-700'
+                      }`}>
+                        {ppe.ppe_name}
+                      </span>
+                      
+                      {formData.selectedPPE.includes(ppe.id) && (
+                        <div className="flex items-center justify-center w-8 h-8 bg-blue-600 rounded-full shadow-sm">
+                          <Check className="w-5 h-5 text-white" />
+                        </div>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div className="p-6 border-2 border-purple-200 rounded-lg bg-purple-50">
@@ -1350,7 +1389,7 @@ Include:
           </div>
         )}
 
-        {/* STEP 5: FIXED Correct Checklist */}
+        {/* STEP 5: Checklist */}
         {currentStep === 5 && (
           <div className="space-y-6">
             <h2 className="text-xl font-semibold text-slate-900">Work Requirements Checklist</h2>
@@ -1380,7 +1419,11 @@ Include:
                       </h3>
                       {categoryQuestions.length > 0 ? (
                         categoryQuestions.map((question) => {
-                          const isTextInput = question.response_type === 'text';
+                          const isTextInput = 
+                            question.question_text.toLowerCase().includes('entrant name') ||
+                            question.question_text.toLowerCase().includes('attendant name') ||
+                            question.question_text.toLowerCase().includes('supervisor name') ||
+                            question.question_text.toLowerCase().includes('stand-by person name');
 
                           return (
                             <div key={question.id}>
@@ -1415,7 +1458,7 @@ Include:
                           );
                         })
                       ) : (
-                        <p className="text-sm text-slate-500">No requirements for {categoryNames[category]}</p>
+                        <p className="text-sm text-slate-500">Loading {categoryNames[category]} requirements...</p>
                       )}
                     </div>
                   );
@@ -1425,214 +1468,166 @@ Include:
           </div>
         )}
 
-      {/* STEP 6: Enhanced Approvers */}
-{currentStep === 6 && (
-  <div className="space-y-6">
-    <h2 className="text-xl font-semibold text-slate-900">Approver Selection & Signatures</h2>
-    
-    {requiresSiteLeaderApproval && (
-      <div className="flex items-start gap-3 p-4 border-2 border-orange-200 rounded-lg bg-orange-50">
-        <AlertTriangle className="w-5 h-5 text-orange-600 shrink-0 mt-0.5" />
-        <div>
-          <p className="font-semibold text-orange-900">Site Leader / Senior Ops Required</p>
-          <p className="text-sm text-orange-700">
-            High-risk permit requires all three approvers
-          </p>
-        </div>
-      </div>
-    )}
+        {/* STEP 6: Approvers */}
+        {currentStep === 6 && (
+          <div className="space-y-6">
+            <h2 className="text-xl font-semibold text-slate-900">Approver Selection</h2>
+            <p className="text-sm text-slate-600">
+              Select the approvers who will review and approve this permit (Optional for testing)
+            </p>
 
-    <div className="space-y-6">
-      {/* Area In-charge */}
-      <div className="p-6 border-2 rounded-lg border-slate-200">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-slate-900">Area In-charge</h3>
-          {approverSignatures.areaManagerSignature && (
-            <span className="flex items-center gap-2 px-3 py-1 text-sm font-medium text-green-700 bg-green-100 rounded-full">
-              <Check className="w-4 h-4" />
-              Signed
-            </span>
-          )}
-        </div>
-
-        <div className="space-y-4">
-          <Select 
-            value={approvers.areaManager.toString()} 
-            onValueChange={(value) => setApprovers({ ...approvers, areaManager: parseInt(value) })}
-          >
-            <SelectTrigger className="bg-white">
-              <SelectValue placeholder="Select Area In-charge" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="0">-- Select --</SelectItem>
-              {areaManagers.map((manager) => (
-                <SelectItem key={manager.id} value={manager.id.toString()}>
-                  {manager.full_name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <div className="flex items-center gap-3 pt-2">
-            <Button
-              type="button"
-              onClick={() => setShowApproverSignature('areaManager')}
-              variant="outline"
-              size="sm"
-            >
-              {approverSignatures.areaManagerSignature ? 'Update' : 'Add'} Digital Signature
-            </Button>
-        
-          </div>
-        </div>
-      </div>
-     {/* Site Leader / Senior Ops - ALWAYS VISIBLE */}
-<div className={`p-6 border-2 rounded-lg ${
-  requiresSiteLeaderApproval 
-    ? 'border-red-300 bg-red-50' 
-    : 'border-slate-200 bg-slate-50'
-}`}>
-  <div className="flex items-center justify-between mb-4">
-    <div>
-      <h3 className="text-lg font-semibold text-slate-900">
-        Site Leader / Senior Ops
-      </h3>
-    </div>
-    {approverSignatures.siteLeaderSignature && (
-      <span className="flex items-center gap-1 px-3 py-1 text-sm font-medium text-green-700 bg-green-100 rounded-full">
-        <Check className="w-4 h-4" />
-        Signed
-      </span>
-    )}
-  </div>
-
-  <div className="space-y-4">
-    <Select 
-      value={approvers.siteLeader.toString()} 
-      onValueChange={(value) => setApprovers({ ...approvers, siteLeader: parseInt(value) })}
-    >
-      <SelectTrigger className="bg-white">
-        <SelectValue placeholder="Choose Site Leader / Senior Ops" />
-      </SelectTrigger>
-      <SelectContent>
-        <SelectItem value="0">-- Select --</SelectItem>
-        {siteLeaders.map((leader) => (
-          <SelectItem key={leader.id} value={leader.id.toString()}>
-            {leader.full_name}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
-
-    {approvers.siteLeader > 0 && (
-      <div className="flex items-center gap-3 p-3 border-t border-slate-200">
-        <Button
-          type="button"
-          onClick={() => setShowApproverSignature('siteLeader')}
-          variant="outline"
-          size="sm"
-          className="gap-2"
-        >
-          <FileText className="w-4 h-4" />
-          Add Digital Signature
-        </Button>
-        
-      </div>
-    )}
-  </div>
-</div>
-      {/* Safety In-charge */}
-      <div className="p-6 border-2 rounded-lg border-slate-200">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-slate-900">Safety In-charge</h3>
-        </div>
-
-        <div className="space-y-4">
-          <Select 
-            value={approvers.safetyOfficer.toString()} 
-            onValueChange={(value) => setApprovers({ ...approvers, safetyOfficer: parseInt(value) })}
-          >
-            <SelectTrigger className="bg-white">
-              <SelectValue placeholder="Select Safety In-charge" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="0">-- Select --</SelectItem>
-              {safetyOfficers.map((officer) => (
-                <SelectItem key={officer.id} value={officer.id.toString()}>
-                  {officer.full_name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <div className="flex items-center gap-3 pt-2">
-            <Button
-              type="button"
-              onClick={() => setShowApproverSignature('safetyOfficer')}
-              variant="outline"
-              size="sm"
-            >
-              {approverSignatures.safetyOfficerSignature ? 'Update' : 'Add'} Digital Signature
-            </Button>
-    
-          </div>
-        </div>
-      </div>
-
-      {/* Site Leader/Senior Ops - Conditional */}
-      {requiresSiteLeaderApproval && (
-        <div className="p-6 border-2 border-red-200 rounded-lg bg-red-50">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h3 className="text-lg font-semibold text-red-900">Site Leader / Senior Ops</h3>
-              <p className="text-sm text-red-600">(Required for high-risk permits)</p>
-            </div>
-            {approverSignatures.siteLeaderSignature && (
-              <span className="flex items-center gap-2 px-3 py-1 text-sm font-medium text-green-700 bg-green-100 rounded-full">
-                <Check className="w-4 h-4" />
-                Signed
-              </span>
+            {requiresSiteLeaderApproval && (
+              <div className="flex items-start gap-3 p-4 border-2 border-orange-200 rounded-lg bg-orange-50">
+                <AlertTriangle className="w-5 h-5 text-orange-600 shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-semibold text-orange-900">High-Risk Permit - Site Leader Required</p>
+                  <p className="text-sm text-orange-700">
+                    This permit requires approval from all three approvers due to multiple high-risk work types.
+                  </p>
+                </div>
+              </div>
             )}
-          </div>
 
-          <div className="space-y-4">
-            <Select 
-              value={approvers.siteLeader.toString()} 
-              onValueChange={(value) => setApprovers({ ...approvers, siteLeader: parseInt(value) })}
-            >
-              <SelectTrigger className="bg-white">
-                <SelectValue placeholder="Select Site Leader / Senior Ops" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="0">-- Select --</SelectItem>
-                {siteLeaders.map((leader) => (
-                  <SelectItem key={leader.id} value={leader.id.toString()}>
-                    {leader.full_name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="space-y-4">
+              {/* Area Manager */}
+              <div>
+                <Label htmlFor="areaManager">Area Manager (Optional for testing)</Label>
+                <Select 
+                  value={approvers.areaManager.toString()} 
+                  onValueChange={(value) => setApprovers({ ...approvers, areaManager: parseInt(value) })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select Area Manager (or skip)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="0">-- Skip for Testing --</SelectItem>
+                    {areaManagers.length === 0 ? (
+                      <SelectItem value="1">Test Area Manager</SelectItem>
+                    ) : (
+                      areaManagers.map((manager) => (
+                        <SelectItem key={manager.id} value={manager.id.toString()}>
+                          {manager.full_name} ({manager.email})
+                        </SelectItem>
+                      ))
+                    )}
+                  </SelectContent>
+                </Select>
+                
+                <div className="flex items-center gap-4 mt-3">
+                  <Button
+                    type="button"
+                    onClick={() => setShowApproverSignature('areaManager')}
+                    variant="outline"
+                    size="sm"
+                  >
+                    {approverSignatures.areaManagerSignature ? 'Update Signature' : 'Add Digital Signature'}
+                  </Button>
+                  {approverSignatures.areaManagerSignature && (
+                    <span className="flex items-center gap-1 text-sm text-green-600">
+                      <Check className="w-4 h-4" />
+                      Signed
+                    </span>
+                  )}
+                </div>
+              </div>
 
-            <div className="flex items-center gap-3 pt-2">
-              <Button
-                type="button"
-                onClick={() => setShowApproverSignature('siteLeader')}
-                variant="outline"
-                size="sm"
-                className="bg-white"
-              >
-                {approverSignatures.siteLeaderSignature ? 'Update' : 'Add'} Digital Signature
+              {/* Safety Officer */}
+              <div>
+                <Label htmlFor="safetyOfficer">Safety Officer (Optional for testing)</Label>
+                <Select 
+                  value={approvers.safetyOfficer.toString()} 
+                  onValueChange={(value) => setApprovers({ ...approvers, safetyOfficer: parseInt(value) })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select Safety Officer (or skip)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="0">-- Skip for Testing --</SelectItem>
+                    {safetyOfficers.length === 0 ? (
+                      <SelectItem value="1">Test Safety Officer</SelectItem>
+                    ) : (
+                      safetyOfficers.map((officer) => (
+                        <SelectItem key={officer.id} value={officer.id.toString()}>
+                          {officer.full_name} ({officer.email})
+                        </SelectItem>
+                      ))
+                    )}
+                  </SelectContent>
+                </Select>
+                
+                <div className="flex items-center gap-4 mt-3">
+                  <Button
+                    type="button"
+                    onClick={() => setShowApproverSignature('safetyOfficer')}
+                    variant="outline"
+                    size="sm"
+                  >
+                    {approverSignatures.safetyOfficerSignature ? 'Update Signature' : 'Add Digital Signature'}
+                  </Button>
+                  {approverSignatures.safetyOfficerSignature && (
+                    <span className="flex items-center gap-1 text-sm text-green-600">
+                      <Check className="w-4 h-4" />
+                      Signed
+                    </span>
+                  )}
+                </div>
+              </div>
 
-              </Button>
+              {/* Site Leader */}
+              {requiresSiteLeaderApproval && (
+                <div className="p-4 border-2 border-red-200 rounded-lg bg-red-50">
+                  <Label htmlFor="siteLeader" className="text-red-900">
+                    Site Leader (Optional for testing - Required for High-Risk in Production)
+                  </Label>
+                  <Select 
+                    value={approvers.siteLeader.toString()} 
+                    onValueChange={(value) => setApprovers({ ...approvers, siteLeader: parseInt(value) })}
+                  >
+                    <SelectTrigger className="mt-2 bg-white">
+                      <SelectValue placeholder="Select Site Leader (or skip)" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="0">-- Skip for Testing --</SelectItem>
+                      {siteLeaders.length === 0 ? (
+                        <SelectItem value="1">Test Site Leader</SelectItem>
+                      ) : (
+                        siteLeaders.map((leader) => (
+                          <SelectItem key={leader.id} value={leader.id.toString()}>
+                            {leader.full_name} ({leader.email})
+                          </SelectItem>
+                        ))
+                      )}
+                    </SelectContent>
+                  </Select>
+                  
+                  <div className="flex items-center gap-4 mt-3">
+                    <Button
+                      type="button"
+                      onClick={() => setShowApproverSignature('siteLeader')}
+                      variant="outline"
+                      size="sm"
+                      className="bg-white"
+                    >
+                      {approverSignatures.siteLeaderSignature ? 'Update Signature' : 'Add Digital Signature'}
+                    </Button>
+                    {approverSignatures.siteLeaderSignature && (
+                      <span className="flex items-center gap-1 text-sm text-green-600">
+                        <Check className="w-4 h-4" />
+                        Signed
+                      </span>
+                    )}
+                  </div>
+                  
+                  <p className="mt-2 text-xs text-red-700">
+                    Site Leader approval is mandatory for permits with 2 or more high-risk work types
+                  </p>
+                </div>
+              )}
             </div>
           </div>
-        </div>
-      )}
-    </div>
-  </div>
-)}
+        )}
 
-        {/* STEP 7: Review - Keep existing code */}
+        {/* STEP 7: Review */}
         {currentStep === 7 && (
           <div className="space-y-6">
             <h2 className="text-xl font-semibold text-slate-900">Review & Submit</h2>
@@ -1733,27 +1728,8 @@ Include:
 
       {/* Signature Modal */}
       {(showSignature || showApproverSignature) && (
-  <div 
-    className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
-    onClick={(e) => {
-      if (e.target === e.currentTarget) {
-        setShowSignature(false);
-        setShowApproverSignature(null);
-      }
-    }}
-  >
-    <div className="relative w-full max-w-2xl p-6 bg-white rounded-xl">
-      {/* X Close Button */}
-      <button
-        type="button"
-        onClick={() => {
-          setShowSignature(false);
-          setShowApproverSignature(null);
-        }}
-        className="absolute p-2 rounded-full top-4 right-4 text-slate-400 hover:text-slate-600 hover:bg-slate-100"
-      >
-        <X className="w-5 h-5" />
-      </button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+          <div className="w-full max-w-2xl p-6 bg-white rounded-xl">
             <h3 className="mb-4 text-lg font-semibold text-slate-900">
               {showApproverSignature 
                 ? `${showApproverSignature === 'areaManager' ? 'Area Manager' : 

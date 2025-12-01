@@ -1,4 +1,4 @@
-// backend/server.js - COMPLETE FIXED VERSION WITH ALL ROUTES
+// backend/server.js - COMPLETE BACKEND SERVER
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
@@ -27,7 +27,7 @@ app.use((req, res, next) => {
   next();
 });
 
-// ============= IMPORT ALL ROUTES =============
+// Import routes
 const authRoutes = require('./src/routes/auth.routes');
 const adminRoutes = require('./src/routes/admin.routes');
 const sitesRoutes = require('./src/routes/sites.routes');
@@ -37,27 +37,15 @@ const permitsRoutes = require('./src/routes/permits.routes');
 const masterRoutes = require('./src/routes/master.routes');
 const dashboardRoutes = require('./src/routes/dashboard.routes');
 
-// ============= REGISTER ALL ROUTES =============
+// Register routes
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/sites', sitesRoutes);
 app.use('/api/departments', departmentsRoutes);
-app.use('/api/users', usersRoutes);           // ⭐ CRITICAL
+app.use('/api/users', usersRoutes);
 app.use('/api/permits', permitsRoutes);
-app.use('/api/master', masterRoutes);         // ⭐ CRITICAL
+app.use('/api/master', masterRoutes);
 app.use('/api/dashboard', dashboardRoutes);
-
-// Vendors route (if separate file exists)
-try {
-  const vendorsRoutes = require('./src/routes/vendors.routes');
-  app.use('/api/vendors', vendorsRoutes);
-} catch (err) {
-  console.warn('⚠️ Vendors routes not found, using fallback');
-  // Fallback vendors endpoint
-  app.get('/api/vendors', (req, res) => {
-    res.json({ success: true, data: [] });
-  });
-}
 
 // Health check
 app.get('/api/health', (req, res) => {
@@ -71,7 +59,6 @@ app.get('/api/health', (req, res) => {
 
 // 404 handler
 app.use((req, res) => {
-  console.error(`❌ 404 - Route not found: ${req.method} ${req.path}`);
   res.status(404).json({
     success: false,
     message: `Route ${req.method} ${req.path} not found`
@@ -80,7 +67,7 @@ app.use((req, res) => {
 
 // Error handler
 app.use((err, req, res, next) => {
-  console.error('❌ Server Error:', err);
+  console.error('Error:', err);
   res.status(500).json({
     success: false,
     message: 'Internal server error',
@@ -97,18 +84,8 @@ app.listen(PORT, () => {
   console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`📊 Database: ${process.env.DB_NAME || 'amazon_eptw_db'}`);
   console.log('============================================================\n');
-  console.log('✅ Registered Routes:');
-  console.log('   /api/auth');
-  console.log('   /api/admin');
-  console.log('   /api/sites');
-  console.log('   /api/departments');
-  console.log('   /api/users          ⭐');
-  console.log('   /api/permits');
-  console.log('   /api/master         ⭐');
-  console.log('   /api/dashboard');
-  console.log('   /api/vendors');
-  console.log('============================================================\n');
-  console.log('✅ Server is ready!\n');
+  console.log('✅ Server is ready!');
+  console.log(`📋 API Documentation: http://localhost:${PORT}/api/health\n`);
 });
 
 module.exports = app;

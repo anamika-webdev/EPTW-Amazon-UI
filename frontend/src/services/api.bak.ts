@@ -1,5 +1,3 @@
-// frontend/src/services/api.ts - COMPLETE & FIXED VERSION
-// This ensures all API calls correctly fetch data from the admin database
 
 import axios, { AxiosInstance, AxiosError } from 'axios';
 import type {
@@ -13,9 +11,10 @@ import type {
   ApiResponse,
   CreatePermitFormData,
   SupervisorDashboardStats,
+  PermitTeamMember
 } from '../types';
 
-// Create axios instance
+// Create axios instance with base configuration
 const api: AxiosInstance = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
   timeout: 30000,
@@ -24,35 +23,27 @@ const api: AxiosInstance = axios.create({
   },
 });
 
-// Request interceptor - add auth token
+// Request interceptor to add auth token
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token') || sessionStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-    console.log(`📤 API Request: ${config.method?.toUpperCase()} ${config.url}`);
     return config;
   },
   (error) => {
-    console.error('❌ Request interceptor error:', error);
     return Promise.reject(error);
   }
 );
 
-// Response interceptor - handle errors
+// Response interceptor for error handling - NO AUTO-REDIRECT
 api.interceptors.response.use(
-  (response) => {
-    console.log(`✅ API Response: ${response.config.method?.toUpperCase()} ${response.config.url}`, response.data);
-    return response;
-  },
+  (response) => response,
   (error: AxiosError) => {
-    console.error(`❌ API Error: ${error.config?.method?.toUpperCase()} ${error.config?.url}`, error.response?.data || error.message);
-    
     if (error.response?.status === 401) {
-      console.error('🔒 Unauthorized - token may be invalid');
+      console.error('Unauthorized - token may be invalid');
     }
-    
     return Promise.reject(error);
   }
 );
@@ -89,20 +80,18 @@ export const authAPI = {
 
 // ============= Dashboard APIs =============
 export const dashboardAPI = {
-  // Get supervisor dashboard stats from admin DB
   getSupervisorStats: async (): Promise<ApiResponse<SupervisorDashboardStats>> => {
     const response = await api.get('/dashboard/supervisor/stats');
     return response.data;
   },
 
-  // Get admin dashboard stats
   getAdminStats: async (): Promise<ApiResponse<any>> => {
     const response = await api.get('/admin/stats');
     return response.data;
   },
 };
 
-// ============= Sites APIs (from Admin DB) =============
+// ============= Sites APIs =============
 export const sitesAPI = {
   getAll: async (filters?: any): Promise<ApiResponse<Site[]>> => {
     const response = await api.get('/sites', { params: filters });
@@ -130,24 +119,16 @@ export const sitesAPI = {
   },
 };
 
-// ============= Users APIs (from Admin DB) =============
+// ============= Users APIs =============
 export const usersAPI = {
-  // Get all users, optionally filtered by role
   getAll: async (role?: string): Promise<ApiResponse<User[]>> => {
     const url = role ? `/users?role=${role}` : '/users';
     const response = await api.get(url);
     return response.data;
   },
 
-  // Get workers specifically (role = 'Worker' or 'Requester')
   getWorkers: async (): Promise<ApiResponse<User[]>> => {
     const response = await api.get('/users/workers');
-    return response.data;
-  },
-
-  // Get users by specific role for approvers
-  getApprovers: async (approverRole: 'Approver_AreaManager' | 'Approver_Safety' | 'Approver_SiteLeader'): Promise<ApiResponse<User[]>> => {
-    const response = await api.get(`/users?role=${approverRole}`);
     return response.data;
   },
 
@@ -172,7 +153,7 @@ export const usersAPI = {
   },
 };
 
-// ============= Vendors APIs (from Admin DB) =============
+// ============= Vendors APIs =============
 export const vendorsAPI = {
   getAll: async (filters?: any): Promise<ApiResponse<Vendor[]>> => {
     const response = await api.get('/vendors', { params: filters });
@@ -202,13 +183,11 @@ export const vendorsAPI = {
 
 // ============= Permits APIs =============
 export const permitsAPI = {
-  // Get all permits (admin view)
   getAll: async (filters?: any): Promise<ApiResponse<Permit[]>> => {
     const response = await api.get('/permits', { params: filters });
     return response.data;
   },
 
-  // Get permits created by the logged-in supervisor
   getMySupervisorPermits: async (): Promise<ApiResponse<Permit[]>> => {
     const response = await api.get('/permits/my-supervisor-permits');
     return response.data;
@@ -233,95 +212,69 @@ export const permitsAPI = {
     const response = await api.delete(`/permits/${id}`);
     return response.data;
   },
+};
 
-  // Approve permit
-  approve: async (id: number, approvalData: any): Promise<ApiResponse<Permit>> => {
-    const response = await api.post(`/permits/${id}/approve`, approvalData);
+// ============= Master Data APIs =============
+export const masterAPI = {
+  getHazards: async (): Promise<ApiResponse<MasterHazard[]>> => {
+    const response = await api.get('/master/hazards');
     return response.data;
   },
 
-  // Reject permit
-  reject: async (id: number, rejectionData: any): Promise<ApiResponse<Permit>> => {
-    const response = await api.post(`/permits/${id}/reject`, rejectionData);
+  getPPE: async (): Promise<ApiResponse<MasterPPE[]>> => {
+    const response = await api.get('/master/ppe');
     return response.data;
   },
 
-  // Close permit
-  close: async (id: number, closeData: any): Promise<ApiResponse<Permit>> => {
-    const response = await api.post(`/permits/${id}/close`, closeData);
-    return response.data;
-  },
-
-  // Request extension
-  requestExtension: async (id: number, extensionData: any): Promise<ApiResponse<Permit>> => {
-    const response = await api.post(`/permits/${id}/request-extension`, extensionData);
+  getChecklistQuestions: async (): Promise<ApiResponse<MasterChecklistQuestion[]>> => {
+    const response = await api.get('/master/checklist-questions');
     return response.data;
   },
 };
 
-// ============= Master Data APIs (from Admin DB) =============
-export const masterDataAPI = {
-  // Get all hazards
-  getHazards: async (permit_type?: string): Promise<ApiResponse<MasterHazard[]>> => {
-    const url = permit_type ? `/master/hazards?permit_type=${permit_type}` : '/master/hazards';
-    const response = await api.get(url);
+// Export as masterDataAPI for backward compatibility
+export const masterDataAPI = masterAPI;
+
+// ============= Team Members APIs =============
+export const teamMembersAPI = {
+  getAll: async (permitId: number): Promise<ApiResponse<PermitTeamMember[]>> => {
+    const response = await api.get(`/permits/${permitId}/team-members`);
     return response.data;
   },
 
-  // Get all PPE items
-  getPPE: async (ppe_type?: string): Promise<ApiResponse<MasterPPE[]>> => {
-    const url = ppe_type ? `/master/ppe?ppe_type=${ppe_type}` : '/master/ppe';
-    const response = await api.get(url);
+  add: async (permitId: number, memberData: Partial<PermitTeamMember>): Promise<ApiResponse<PermitTeamMember>> => {
+    const response = await api.post(`/permits/${permitId}/team-members`, memberData);
     return response.data;
   },
 
-  // Get checklist questions
-  getChecklistQuestions: async (permit_type?: string): Promise<ApiResponse<MasterChecklistQuestion[]>> => {
-    const url = permit_type 
-      ? `/master/checklist-questions?permit_type=${permit_type}` 
-      : '/master/checklist-questions';
-    const response = await api.get(url);
+  update: async (permitId: number, memberId: number, memberData: Partial<PermitTeamMember>): Promise<ApiResponse<PermitTeamMember>> => {
+    const response = await api.put(`/permits/${permitId}/team-members/${memberId}`, memberData);
     return response.data;
   },
 
-  // Create hazard
-  createHazard: async (hazardData: Omit<MasterHazard, 'id'>): Promise<ApiResponse<MasterHazard>> => {
-    const response = await api.post('/master/hazards', hazardData);
-    return response.data;
-  },
-
-  // Create PPE
-  createPPE: async (ppeData: Omit<MasterPPE, 'id'>): Promise<ApiResponse<MasterPPE>> => {
-    const response = await api.post('/master/ppe', ppeData);
-    return response.data;
-  },
-
-  // Create checklist question
-  createChecklistQuestion: async (questionData: Omit<MasterChecklistQuestion, 'id'>): Promise<ApiResponse<MasterChecklistQuestion>> => {
-    const response = await api.post('/master/checklist-questions', questionData);
+  remove: async (permitId: number, memberId: number): Promise<ApiResponse<void>> => {
+    const response = await api.delete(`/permits/${permitId}/team-members/${memberId}`);
     return response.data;
   },
 };
 
 // ============= File Upload APIs =============
 export const uploadAPI = {
-  uploadSWMS: async (file: File): Promise<ApiResponse<{ url: string }>> => {
-    const formData = new FormData();
-    formData.append('swms', file);
-
-    const response = await api.post('/uploads/swms', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
-    return response.data;
-  },
-
   uploadSignature: async (file: File): Promise<ApiResponse<{ url: string }>> => {
     const formData = new FormData();
     formData.append('signature', file);
+    const response = await api.post('/upload/signature', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  },
 
-    const response = await api.post('/uploads/signature', formData, {
+  uploadSWMS: async (file: File): Promise<ApiResponse<{ url: string }>> => {
+    const formData = new FormData();
+    formData.append('swms', file);
+    const response = await api.post('/upload/swms', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
@@ -330,37 +283,6 @@ export const uploadAPI = {
   },
 };
 
-// ============= Admin APIs =============
-export const adminAPI = {
-  // Get all users (admin view)
-  getUsers: async (filters?: any): Promise<ApiResponse<User[]>> => {
-    const response = await api.get('/admin/users', { params: filters });
-    return response.data;
-  },
-
-  // Create user (admin only)
-  createUser: async (userData: any): Promise<ApiResponse<User>> => {
-    const response = await api.post('/admin/users', userData);
-    return response.data;
-  },
-
-  // Update user (admin only)
-  updateUser: async (id: number, userData: any): Promise<ApiResponse<User>> => {
-    const response = await api.put(`/admin/users/${id}`, userData);
-    return response.data;
-  },
-
-  // Delete user (admin only)
-  deleteUser: async (id: number): Promise<ApiResponse<void>> => {
-    const response = await api.delete(`/admin/users/${id}`);
-    return response.data;
-  },
-
-  // Get admin stats
-  getStats: async (): Promise<ApiResponse<any>> => {
-    const response = await api.get('/admin/stats');
-    return response.data;
-  },
-};
-
+// Export the axios instance for custom requests
+export const apiService = api;
 export default api;

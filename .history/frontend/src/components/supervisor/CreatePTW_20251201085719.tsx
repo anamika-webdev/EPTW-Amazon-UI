@@ -1763,10 +1763,17 @@ Include:
             </h3>
             <DigitalSignature
               onSave={handleSignatureSave}
-              onCancel={() => {
-                setShowSignature(false);
-                setShowApproverSignature(null);
-              }}
+              <Button 
+  type="button"
+  onClick={(e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onCancel();
+  }} 
+  variant="outline"
+>
+  Cancel
+</Button>
             />
           </div>
         </div>

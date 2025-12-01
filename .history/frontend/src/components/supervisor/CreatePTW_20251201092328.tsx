@@ -607,18 +607,22 @@ const RequirementRow = ({ questionId, label, value, onChange, isTextInput, textV
           {label} *
         </Label>
         <input
-          id={`text-${questionId}`}
-          type="text"
-          value={textValue || ''}
-          onChange={(e) => {
-            const newValue = e.target.value;
-            console.log('Text input changed:', questionId, newValue);
-            onTextChange?.(newValue);
-          }}
-          placeholder="Enter full name..."
-          className="flex w-full h-10 max-w-md px-3 py-2 text-sm bg-white border rounded-md border-slate-200 ring-offset-background placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-          autoComplete="off"
-        />
+  id={`text-${questionId}`}
+  type="text"
+  key={questionId}
+  defaultValue={textValue || ''}
+  onBlur={(e) => {
+    const value = e.target.value;
+    onTextChange?.(value);
+  }}
+  onChange={(e) => {
+    const value = e.target.value;
+    onTextChange?.(value);
+  }}
+  placeholder="Enter full name..."
+  className="flex w-full h-10 max-w-md px-3 py-2 text-sm bg-white border rounded-md border-slate-200 ring-offset-background placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+  autoComplete="off"
+/>
       </div>
     );
   }
@@ -941,179 +945,141 @@ const RequirementRow = ({ questionId, label, value, onChange, isTextInput, textV
         )}
 
         {/* STEP 2: Issued To & Workers - Keep existing code */}
-        {currentStep === 2 && (
-          <div className="space-y-6">
-            <h2 className="text-xl font-semibold text-slate-900">Issued To & Workers Assignment</h2>
-            
-            <div className="p-6 space-y-4 border-2 border-blue-200 rounded-lg bg-blue-50">
-              <h3 className="flex items-center gap-2 font-medium text-slate-900">
-                <FileText className="w-5 h-5 text-blue-600" />
-                Issued To (Permit Recipient)
-              </h3>
-              <div className="grid gap-4 md:grid-cols-2">
-                <div>
-                  <Label htmlFor="issuedToName">Vendor Name *</Label>
-                  <Input
-                    id="issuedToName"
-                    value={formData.issuedToName}
-                    onChange={(e) => setFormData({ ...formData, issuedToName: e.target.value })}
-                    placeholder="e.g., XYZ pvt ltd."
-                    className="bg-white"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="issuedToContact">Contact Number *</Label>
-                  <Input
-                    id="issuedToContact"
-                    value={formData.issuedToContact}
-                    onChange={(e) => setFormData({ ...formData, issuedToContact: e.target.value })}
-                    placeholder="e.g., +91 9876543210"
-                    className="bg-white"
-                  />
-                </div>
+       {/* STEP 2: Worker Assignment - BOTH SECTIONS ALWAYS VISIBLE */}
+<div className="space-y-6">
+  {/* Existing Workers Section - ALWAYS VISIBLE */}
+  <div className="p-4 border rounded-lg border-slate-200">
+    <h3 className="mb-3 text-lg font-semibold text-slate-900">
+      Existing Workers
+      <span className="ml-2 text-sm font-normal text-slate-500">
+        ({formData.selectedWorkers.length} selected)
+      </span>
+    </h3>
+    
+    <div className="overflow-y-auto max-h-96">
+      <div className="space-y-2">
+        {workers.length > 0 ? (
+          workers.map((worker) => (
+            <label
+              key={worker.id}
+              className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer border-slate-200 hover:bg-slate-50"
+            >
+              <Checkbox
+                checked={formData.selectedWorkers.includes(worker.id)}
+                onCheckedChange={(checked) => {
+                  if (checked) {
+                    setFormData(prev => ({
+                      ...prev,
+                      selectedWorkers: [...prev.selectedWorkers, worker.id]
+                    }));
+                  } else {
+                    setFormData(prev => ({
+                      ...prev,
+                      selectedWorkers: prev.selectedWorkers.filter(id => id !== worker.id)
+                    }));
+                  }
+                }}
+              />
+              <div className="flex-1">
+                <p className="text-sm font-medium text-slate-900">{worker.full_name}</p>
+                <p className="text-xs text-slate-500">{worker.email}</p>
               </div>
+            </label>
+          ))
+        ) : (
+          <p className="text-sm text-center text-slate-500">No workers available</p>
+        )}
+      </div>
+    </div>
+  </div>
+
+  {/* New Workers Section - ALWAYS VISIBLE */}
+  <div className="p-4 border-2 border-green-200 rounded-lg bg-green-50">
+    <h3 className="mb-3 text-lg font-semibold text-green-900">
+      Add New Workers
+      <span className="ml-2 text-sm font-normal text-green-700">
+        ({newWorkers.length} added)
+      </span>
+    </h3>
+    
+    <div className="space-y-4">
+      <Button onClick={addNewWorker} variant="outline" className="gap-2">
+        <FileText className="w-4 h-4" />
+        Add New Worker
+      </Button>
+      
+      {newWorkers.map((worker, index) => (
+        <div key={index} className="p-4 space-y-4 bg-white border border-green-300 rounded-lg">
+          <div className="grid gap-4 md:grid-cols-2">
+            <div>
+              <Label htmlFor={`name-${index}`}>Name *</Label>
+              <Input
+                id={`name-${index}`}
+                value={worker.name}
+                onChange={(e) => updateNewWorker(index, 'name', e.target.value)}
+                placeholder="e.g., Rahul Mishra"
+              />
             </div>
-
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-slate-900">Workers Assignment</h3>
-              <p className="text-slate-600">Select the workers who will be performing this work</p>
-              
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="flex items-center gap-4">
-                  <Checkbox
-                    checked={workerSelectionMode === 'existing'}
-                    onCheckedChange={(checked) => setWorkerSelectionMode(checked ? 'existing' : 'new')}
-                  />
-                  <p className="text-sm font-medium text-slate-700">Existing Workers</p>
-                </div>
-                <div className="flex items-center gap-4">
-                  <Checkbox
-                    checked={workerSelectionMode === 'new'}
-                    onCheckedChange={(checked) => setWorkerSelectionMode(checked ? 'new' : 'existing')}
-                  />
-                  <p className="text-sm font-medium text-slate-700">Add New Workers</p>
-                </div>
-              </div>
-
-              {workerSelectionMode === 'existing' && (
-                <div className="p-4 overflow-y-auto border rounded-lg border-slate-200 max-h-96">
-                  <div className="space-y-2">
-                    {workers.length > 0 ? (
-                      workers.map((worker) => (
-                        <label
-                          key={worker.id}
-                          className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer border-slate-200 hover:bg-slate-50"
-                        >
-                          <Checkbox
-                            checked={formData.selectedWorkers.includes(worker.id)}
-                            onCheckedChange={(checked) => {
-                              if (checked) {
-                                setFormData(prev => ({
-                                  ...prev,
-                                  selectedWorkers: [...prev.selectedWorkers, worker.id]
-                                }));
-                              } else {
-                                setFormData(prev => ({
-                                  ...prev,
-                                  selectedWorkers: prev.selectedWorkers.filter(id => id !== worker.id)
-                                }));
-                              }
-                            }}
-                          />
-                          <div className="flex-1">
-                            <p className="text-sm font-medium text-slate-900">{worker.full_name}</p>
-                            <p className="text-xs text-slate-500">{worker.email}</p>
-                          </div>
-                        </label>
-                      ))
-                    ) : (
-                      <p className="text-sm text-center text-slate-500">No workers available. Please add new workers below.</p>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {workerSelectionMode === 'new' && (
-                <div className="space-y-4">
-                  <Button onClick={addNewWorker} variant="outline" className="gap-2">
-                    <FileText className="w-4 h-4" />
-                    Add New Worker
-                  </Button>
-                  
-                  {newWorkers.map((worker, index) => (
-                    <div key={index} className="p-4 space-y-4 border rounded-lg border-slate-200">
-                      <div className="grid gap-4 md:grid-cols-2">
-                        <div>
-                          <Label htmlFor={`name-${index}`}>Name *</Label>
-                          <Input
-                            id={`name-${index}`}
-                            value={worker.name}
-                            onChange={(e) => updateNewWorker(index, 'name', e.target.value)}
-                            placeholder="e.g., Rahul Mishra"
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor={`companyName-${index}`}>Company Name *</Label>
-                          <Input
-                            id={`companyName-${index}`}
-                            value={worker.companyName}
-                            onChange={(e) => updateNewWorker(index, 'companyName', e.target.value)}
-                            placeholder="e.g., XYZ Pvt Ltd"
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor={`phone-${index}`}>Phone *</Label>
-                          <Input
-                            id={`phone-${index}`}
-                            value={worker.phone}
-                            onChange={(e) => updateNewWorker(index, 'phone', e.target.value)}
-                            placeholder="e.g., +1234567890"
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor={`email-${index}`}>Email *</Label>
-                          <Input
-                            id={`email-${index}`}
-                            value={worker.email}
-                            onChange={(e) => updateNewWorker(index, 'email', e.target.value)}
-                            placeholder="e.g., rahul.mishra@example.com"
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor={`role-${index}`}>Role *</Label>
-                          <Select
-                            value={worker.role}
-                            onValueChange={(value) => updateNewWorker(index, 'role', value)}
-                          >
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="Worker">Worker</SelectItem>
-                              <SelectItem value="Supervisor">Supervisor</SelectItem>
-                              <SelectItem value="Fire_Watcher">Fire Watcher</SelectItem>
-                              <SelectItem value="Standby">Standby Person</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
-                      <div className="flex justify-end">
-                        <Button
-                          onClick={() => removeNewWorker(index)}
-                          variant="outline"
-                          size="sm"
-                          className="gap-2 text-red-600 hover:text-red-700 hover:bg-red-50"
-                        >
-                          Remove Worker
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+            <div>
+              <Label htmlFor={`companyName-${index}`}>Company Name *</Label>
+              <Input
+                id={`companyName-${index}`}
+                value={worker.companyName}
+                onChange={(e) => updateNewWorker(index, 'companyName', e.target.value)}
+                placeholder="e.g., XYZ Pvt Ltd"
+              />
+            </div>
+            <div>
+              <Label htmlFor={`phone-${index}`}>Phone *</Label>
+              <Input
+                id={`phone-${index}`}
+                value={worker.phone}
+                onChange={(e) => updateNewWorker(index, 'phone', e.target.value)}
+                placeholder="e.g., +1234567890"
+              />
+            </div>
+            <div>
+              <Label htmlFor={`email-${index}`}>Email *</Label>
+              <Input
+                id={`email-${index}`}
+                value={worker.email}
+                onChange={(e) => updateNewWorker(index, 'email', e.target.value)}
+                placeholder="e.g., rahul.mishra@example.com"
+              />
+            </div>
+            <div>
+              <Label htmlFor={`role-${index}`}>Role *</Label>
+              <Select
+                value={worker.role}
+                onValueChange={(value) => updateNewWorker(index, 'role', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Worker">Worker</SelectItem>
+                  <SelectItem value="Supervisor">Supervisor</SelectItem>
+                  <SelectItem value="Fire_Watcher">Fire Watcher</SelectItem>
+                  <SelectItem value="Standby">Standby Person</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
-        )}
+          <div className="flex justify-end">
+            <Button
+              onClick={() => removeNewWorker(index)}
+              variant="outline"
+              size="sm"
+              className="gap-2 text-red-600 hover:text-red-700 hover:bg-red-50"
+            >
+              Remove Worker
+            </Button>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+</div>
 
         {/* STEP 3: Hazards - Keep existing code */}
         {currentStep === 3 && (
@@ -1732,45 +1698,51 @@ Include:
       </div>
 
       {/* Signature Modal */}
-      {(showSignature || showApproverSignature) && (
+     {/* Signature Modal - FIXED */}
+{(showSignature || showApproverSignature) && (
   <div 
     className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
     onClick={(e) => {
+      // Close when clicking backdrop
       if (e.target === e.currentTarget) {
         setShowSignature(false);
         setShowApproverSignature(null);
       }
     }}
   >
-    <div className="relative w-full max-w-2xl p-6 bg-white rounded-xl">
-      {/* X Close Button */}
+    <div className="relative w-full max-w-2xl p-6 bg-white shadow-xl rounded-xl">
+      {/* X Close Button - NEW */}
       <button
         type="button"
-        onClick={() => {
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
           setShowSignature(false);
           setShowApproverSignature(null);
         }}
-        className="absolute p-2 rounded-full top-4 right-4 text-slate-400 hover:text-slate-600 hover:bg-slate-100"
+        className="absolute p-2 transition-colors rounded-full top-4 right-4 text-slate-400 hover:text-slate-600 hover:bg-slate-100"
+        aria-label="Close"
       >
         <X className="w-5 h-5" />
       </button>
-            <h3 className="mb-4 text-lg font-semibold text-slate-900">
-              {showApproverSignature 
-                ? `${showApproverSignature === 'areaManager' ? 'Area Manager' : 
-                     showApproverSignature === 'safetyOfficer' ? 'Safety Officer' : 
-                     'Site Leader'} Digital Signature`
-                : 'Issuer Digital Signature'}
-            </h3>
-            <DigitalSignature
-              onSave={handleSignatureSave}
-              onCancel={() => {
-                setShowSignature(false);
-                setShowApproverSignature(null);
-              }}
-            />
-          </div>
-        </div>
-      )}
+
+      <h3 className="mb-4 text-lg font-semibold text-slate-900">
+        {showApproverSignature 
+          ? `${showApproverSignature === 'areaManager' ? 'Area In-charge' : 
+               showApproverSignature === 'safetyOfficer' ? 'Safety In-charge' : 
+               'Site Leader / Senior Ops'} Digital Signature`
+          : 'Issuer Digital Signature'}
+      </h3>
+      <DigitalSignature
+        onSave={handleSignatureSave}
+        onCancel={() => {
+          setShowSignature(false);
+          setShowApproverSignature(null);
+        }}
+      />
+    </div>
+  </div>
+)}
     </div>
   );
 }
