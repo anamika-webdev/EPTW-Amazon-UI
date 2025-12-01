@@ -197,9 +197,6 @@ export function CreatePTW({ onBack, onSuccess }: CreatePTWProps) {
   const totalSteps = 7;
   const progress = (currentStep / totalSteps) * 100;
 
-  // CRITICAL FIX: Memoized text change handler to prevent re-renders
-  
-
   useEffect(() => {
     loadMasterData();
     loadApprovers();
@@ -593,7 +590,7 @@ export function CreatePTW({ onBack, onSuccess }: CreatePTWProps) {
     onTextChange?: (value: string) => void;
   }
 
-  // ALTERNATIVE FIX: Uncontrolled input with ref (no re-render issues)
+  // ULTIMATE FIX: RequirementRow component with local state to prevent re-render issues
   const RequirementRow = ({ 
     questionId, 
     label, 
@@ -603,14 +600,13 @@ export function CreatePTW({ onBack, onSuccess }: CreatePTWProps) {
     textValue, 
     onTextChange 
   }: RequirementRowProps) => {
-    const inputRef = useRef<HTMLTextAreaElement>(null);
+    // CRITICAL: Use local state to handle input value smoothly
+    const [localValue, setLocalValue] = useState(textValue || '');
 
-    // Initialize value once on mount
+    // Sync with parent when textValue changes from outside
     useEffect(() => {
-      if (inputRef.current && textValue) {
-        inputRef.current.value = textValue;
-      }
-    }, []);
+      setLocalValue(textValue || '');
+    }, [textValue]);
 
     if (isTextInput) {
       return (
@@ -618,19 +614,20 @@ export function CreatePTW({ onBack, onSuccess }: CreatePTWProps) {
           <Label htmlFor={`text-${questionId}`} className="block mb-2 text-sm font-medium text-slate-700">
             {label} *
           </Label>
-          <textarea
-            ref={inputRef}
-             key={`input-${questionId}`}
+          <input
             id={`text-${questionId}`}
-            defaultValue={textValue || ''}
+            type="text"
+            value={localValue}
             onChange={(e) => {
+              const newValue = e.target.value;
+              setLocalValue(newValue); // Update local state immediately for smooth typing
               if (onTextChange) {
-                onTextChange(e.target.value);
+                onTextChange(newValue); // Then update parent state
               }
             }}
             placeholder="Enter full name..."
-            rows={2}
-            className="flex min-h-[80px] w-full max-w-md rounded-md border border-slate-300 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex w-full h-10 max-w-md px-3 py-2 text-sm bg-white border rounded-md border-slate-200 ring-offset-background placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+            autoComplete="off"
           />
         </div>
       );
@@ -1421,15 +1418,16 @@ Include:
                                 }))}
                                 isTextInput={isTextInput}
                                 textValue={formData.checklistTextResponses[question.id]}
-                               onTextChange={(val) => {
-  setFormData(prev => ({
-    ...prev,
-    checklistTextResponses: { 
-      ...prev.checklistTextResponses, 
-      [question.id]: val 
-    }
-  }));
-}}
+                                onTextChange={(val) => {
+                                  // FIXED: Simple direct state update
+                                  setFormData(prev => ({
+                                    ...prev,
+                                    checklistTextResponses: { 
+                                      ...prev.checklistTextResponses, 
+                                      [question.id]: val 
+                                    }
+                                  }));
+                                }}
                               />
                               {!isTextInput && formData.checklistResponses[question.id] === 'No' && (
                                 <div className="mt-2 mb-4 ml-4">

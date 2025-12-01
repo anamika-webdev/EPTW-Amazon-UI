@@ -197,9 +197,6 @@ export function CreatePTW({ onBack, onSuccess }: CreatePTWProps) {
   const totalSteps = 7;
   const progress = (currentStep / totalSteps) * 100;
 
-  // CRITICAL FIX: Memoized text change handler to prevent re-renders
-  
-
   useEffect(() => {
     loadMasterData();
     loadApprovers();
@@ -593,7 +590,7 @@ export function CreatePTW({ onBack, onSuccess }: CreatePTWProps) {
     onTextChange?: (value: string) => void;
   }
 
-  // ALTERNATIVE FIX: Uncontrolled input with ref (no re-render issues)
+  // FIXED: RequirementRow component with proper text input handling
   const RequirementRow = ({ 
     questionId, 
     label, 
@@ -603,34 +600,25 @@ export function CreatePTW({ onBack, onSuccess }: CreatePTWProps) {
     textValue, 
     onTextChange 
   }: RequirementRowProps) => {
-    const inputRef = useRef<HTMLTextAreaElement>(null);
-
-    // Initialize value once on mount
-    useEffect(() => {
-      if (inputRef.current && textValue) {
-        inputRef.current.value = textValue;
-      }
-    }, []);
-
     if (isTextInput) {
       return (
         <div className="py-3 border-b border-slate-100">
           <Label htmlFor={`text-${questionId}`} className="block mb-2 text-sm font-medium text-slate-700">
             {label} *
           </Label>
-          <textarea
-            ref={inputRef}
-             key={`input-${questionId}`}
+          <Input
             id={`text-${questionId}`}
-            defaultValue={textValue || ''}
+            type="text"
+            value={textValue || ''}
             onChange={(e) => {
-              if (onTextChange) {
-                onTextChange(e.target.value);
-              }
+              // FIXED: Direct value passing without processing
+              const newValue = e.target.value;
+              console.log('Text input changed:', questionId, newValue);
+              onTextChange?.(newValue);
             }}
             placeholder="Enter full name..."
-            rows={2}
-            className="flex min-h-[80px] w-full max-w-md rounded-md border border-slate-300 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+            className="max-w-md"
+            autoComplete="off"
           />
         </div>
       );
@@ -1421,15 +1409,16 @@ Include:
                                 }))}
                                 isTextInput={isTextInput}
                                 textValue={formData.checklistTextResponses[question.id]}
-                               onTextChange={(val) => {
-  setFormData(prev => ({
-    ...prev,
-    checklistTextResponses: { 
-      ...prev.checklistTextResponses, 
-      [question.id]: val 
-    }
-  }));
-}}
+                                onTextChange={(val) => {
+                                  // FIXED: Simple direct state update
+                                  setFormData(prev => ({
+                                    ...prev,
+                                    checklistTextResponses: { 
+                                      ...prev.checklistTextResponses, 
+                                      [question.id]: val 
+                                    }
+                                  }));
+                                }}
                               />
                               {!isTextInput && formData.checklistResponses[question.id] === 'No' && (
                                 <div className="mt-2 mb-4 ml-4">

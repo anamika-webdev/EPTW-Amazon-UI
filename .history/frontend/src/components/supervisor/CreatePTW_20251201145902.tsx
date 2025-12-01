@@ -1421,15 +1421,7 @@ Include:
                                 }))}
                                 isTextInput={isTextInput}
                                 textValue={formData.checklistTextResponses[question.id]}
-                               onTextChange={(val) => {
-  setFormData(prev => ({
-    ...prev,
-    checklistTextResponses: { 
-      ...prev.checklistTextResponses, 
-      [question.id]: val 
-    }
-  }));
-}}
+                                onTextChange={(val) => handleTextChange(question.id, val)}
                               />
                               {!isTextInput && formData.checklistResponses[question.id] === 'No' && (
                                 <div className="mt-2 mb-4 ml-4">

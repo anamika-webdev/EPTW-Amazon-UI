@@ -1,5 +1,5 @@
 // src/components/supervisor/CreatePTW.tsx - COMPLETE UPDATED VERSION WITH FIXES
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { ArrowLeft, Upload, FileText, Check, AlertTriangle, X } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
@@ -198,7 +198,15 @@ export function CreatePTW({ onBack, onSuccess }: CreatePTWProps) {
   const progress = (currentStep / totalSteps) * 100;
 
   // CRITICAL FIX: Memoized text change handler to prevent re-renders
-  
+  const handleTextChange = useCallback((questionId: number, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      checklistTextResponses: { 
+        ...prev.checklistTextResponses, 
+        [questionId]: value 
+      }
+    }));
+  }, []);
 
   useEffect(() => {
     loadMasterData();
@@ -620,7 +628,6 @@ export function CreatePTW({ onBack, onSuccess }: CreatePTWProps) {
           </Label>
           <textarea
             ref={inputRef}
-             key={`input-${questionId}`}
             id={`text-${questionId}`}
             defaultValue={textValue || ''}
             onChange={(e) => {
@@ -1421,15 +1428,7 @@ Include:
                                 }))}
                                 isTextInput={isTextInput}
                                 textValue={formData.checklistTextResponses[question.id]}
-                               onTextChange={(val) => {
-  setFormData(prev => ({
-    ...prev,
-    checklistTextResponses: { 
-      ...prev.checklistTextResponses, 
-      [question.id]: val 
-    }
-  }));
-}}
+                                onTextChange={(val) => handleTextChange(question.id, val)}
                               />
                               {!isTextInput && formData.checklistResponses[question.id] === 'No' && (
                                 <div className="mt-2 mb-4 ml-4">

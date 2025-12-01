@@ -1,5 +1,5 @@
 // src/components/supervisor/CreatePTW.tsx - COMPLETE UPDATED VERSION WITH FIXES
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { ArrowLeft, Upload, FileText, Check, AlertTriangle, X } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
@@ -198,7 +198,15 @@ export function CreatePTW({ onBack, onSuccess }: CreatePTWProps) {
   const progress = (currentStep / totalSteps) * 100;
 
   // CRITICAL FIX: Memoized text change handler to prevent re-renders
-  
+  const handleTextChange = useCallback((questionId: number, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      checklistTextResponses: { 
+        ...prev.checklistTextResponses, 
+        [questionId]: value 
+      }
+    }));
+  }, []);
 
   useEffect(() => {
     loadMasterData();
@@ -593,7 +601,7 @@ export function CreatePTW({ onBack, onSuccess }: CreatePTWProps) {
     onTextChange?: (value: string) => void;
   }
 
-  // ALTERNATIVE FIX: Uncontrolled input with ref (no re-render issues)
+  // FIXED: Use Textarea component (same as Control Measures field)
   const RequirementRow = ({ 
     questionId, 
     label, 
@@ -603,34 +611,19 @@ export function CreatePTW({ onBack, onSuccess }: CreatePTWProps) {
     textValue, 
     onTextChange 
   }: RequirementRowProps) => {
-    const inputRef = useRef<HTMLTextAreaElement>(null);
-
-    // Initialize value once on mount
-    useEffect(() => {
-      if (inputRef.current && textValue) {
-        inputRef.current.value = textValue;
-      }
-    }, []);
-
     if (isTextInput) {
       return (
         <div className="py-3 border-b border-slate-100">
           <Label htmlFor={`text-${questionId}`} className="block mb-2 text-sm font-medium text-slate-700">
             {label} *
           </Label>
-          <textarea
-            ref={inputRef}
-             key={`input-${questionId}`}
+          <Textarea
             id={`text-${questionId}`}
-            defaultValue={textValue || ''}
-            onChange={(e) => {
-              if (onTextChange) {
-                onTextChange(e.target.value);
-              }
-            }}
+            value={textValue || ''}
+            onChange={(e) => onTextChange?.(e.target.value)}
             placeholder="Enter full name..."
             rows={2}
-            className="flex min-h-[80px] w-full max-w-md rounded-md border border-slate-300 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+            className="max-w-md"
           />
         </div>
       );
@@ -1421,15 +1414,7 @@ Include:
                                 }))}
                                 isTextInput={isTextInput}
                                 textValue={formData.checklistTextResponses[question.id]}
-                               onTextChange={(val) => {
-  setFormData(prev => ({
-    ...prev,
-    checklistTextResponses: { 
-      ...prev.checklistTextResponses, 
-      [question.id]: val 
-    }
-  }));
-}}
+                                onTextChange={(val) => handleTextChange(question.id, val)}
                               />
                               {!isTextInput && formData.checklistResponses[question.id] === 'No' && (
                                 <div className="mt-2 mb-4 ml-4">
