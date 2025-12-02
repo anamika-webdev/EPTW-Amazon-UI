@@ -1,4 +1,4 @@
-// frontend/src/components/supervisor/SupervisorDashboard.tsx - COMPLETE WITH MODALS
+// frontend/src/components/supervisor/SupervisorDashboard.tsx - WITH PTW EXTENDED TABLE
 import { useState, useEffect } from 'react';
 import { Button } from '../ui/button';
 import { FileText, Users, CheckCircle2, Clock, XCircle, Play, Eye, ArrowRight } from 'lucide-react';
@@ -6,7 +6,6 @@ import { dashboardAPI, permitsAPI } from '../../services/api';
 import type { Permit, SupervisorDashboardStats } from '../../types';
 import { ExtendPTWModal } from './ExtendPTWModal';
 import { PermitDetailView } from './PermitDetailView';
-
 interface SupervisorDashboardProps {
   onNavigate: (page: string, data?: any) => void;
 }
@@ -52,11 +51,10 @@ export function SupervisorDashboard({ onNavigate }: SupervisorDashboardProps) {
     closed_permits: 0,
     total_workers: 0
   });
-  
   const [extendModalOpen, setExtendModalOpen] = useState(false);
-  const [selectedPermitForExtend, setSelectedPermitForExtend] = useState<Permit | null>(null);
-  const [detailViewOpen, setDetailViewOpen] = useState(false);
-  const [selectedPermitId, setSelectedPermitId] = useState<number | null>(null);
+const [selectedPermitForExtend, setSelectedPermitForExtend] = useState<Permit | null>(null);
+const [detailViewOpen, setDetailViewOpen] = useState(false);
+const [selectedPermitId, setSelectedPermitId] = useState<number | null>(null);
   const [allPermits, setAllPermits] = useState<Permit[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -114,84 +112,84 @@ export function SupervisorDashboard({ onNavigate }: SupervisorDashboardProps) {
     p.status === 'Closed'
   );
 
-  // Handler functions
-  const handleViewPermit = (permit: Permit) => {
-    console.log('📄 Viewing permit:', permit.id);
-    setSelectedPermitId(permit.id);
-    setDetailViewOpen(true);
-  };
+// Handler functions
+const handleViewPermit = (permit: Permit) => {
+  console.log('📄 Viewing permit:', permit.id);
+  setSelectedPermitId(permit.id);
+  setDetailViewOpen(true);
+};
 
-  const handleExtendPermit = (permit: Permit) => {
-    console.log('⏱️ Extending permit:', permit.id);
-    setSelectedPermitForExtend(permit);
-    setExtendModalOpen(true);
-  };
+const handleExtendPermit = (permit: Permit) => {
+  console.log('⏱️ Extending permit:', permit.id);
+  setSelectedPermitForExtend(permit);
+  setExtendModalOpen(true);
+};
 
-  const handleSubmitExtension = async (data: {
-    new_end_date: string;
-    new_end_time: string;
-    reason: string;
-    work_completion_percentage: number;
-  }) => {
-    if (!selectedPermitForExtend) return;
+const handleSubmitExtension = async (data: {
+  new_end_date: string;
+  new_end_time: string;
+  reason: string;
+  work_completion_percentage: number;
+}) => {
+  if (!selectedPermitForExtend) return;
 
-    const newEndDateTime = `${data.new_end_date} ${data.new_end_time}`;
+  const newEndDateTime = `${data.new_end_date} ${data.new_end_time}`;
 
-    try {
-      const response = await permitsAPI.requestExtension(selectedPermitForExtend.id, {
-        new_end_time: newEndDateTime,
-        reason: data.reason
-      });
+  try {
+    const response = await permitsAPI.requestExtension(selectedPermitForExtend.id, {
+      new_end_time: newEndDateTime,
+      reason: data.reason
+    });
 
-      if (response.success) {
-        alert('✅ Extension requested successfully!');
-        loadDashboardData();
-      } else {
-        alert('❌ Failed to request extension: ' + response.message);
-      }
-    } catch (error) {
-      console.error('Error requesting extension:', error);
-      alert('❌ Error requesting extension');
+    if (response.success) {
+      alert('✅ Extension requested successfully!');
+      loadDashboardData();
+    } else {
+      alert('❌ Failed to request extension: ' + response.message);
     }
-  };
+  } catch (error) {
+    console.error('Error requesting extension:', error);
+    alert('❌ Error requesting extension');
+  }
+};
 
-  const handleClosePermit = async (permit: Permit) => {
-    console.log('🔒 Closing permit:', permit.id);
-    
-    const confirmClose = confirm(
-      `Are you sure you want to close permit ${permit.permit_serial || permit.id}?\n\n` +
-      `Location: ${permit.work_location}\n` +
-      `This action cannot be undone.`
-    );
+const handleClosePermit = async (permit: Permit) => {
+  console.log('🔒 Closing permit:', permit.id);
+  
+  const confirmClose = confirm(
+    `Are you sure you want to close permit ${permit.permit_serial || permit.id}?\n\n` +
+    `Location: ${permit.work_location}\n` +
+    `This action cannot be undone.`
+  );
 
-    if (!confirmClose) return;
+  if (!confirmClose) return;
 
-    const housekeepingDone = confirm('✓ Housekeeping completed?');
-    const toolsRemoved = confirm('✓ Tools and equipment removed?');
-    const locksRemoved = confirm('✓ Locks/tags removed?');
-    const areaRestored = confirm('✓ Area restored to normal?');
-    const remarks = prompt('Enter any final remarks (optional):');
+  const housekeepingDone = confirm('✓ Housekeeping completed?');
+  const toolsRemoved = confirm('✓ Tools and equipment removed?');
+  const locksRemoved = confirm('✓ Locks/tags removed?');
+  const areaRestored = confirm('✓ Area restored to normal?');
+  const remarks = prompt('Enter any final remarks (optional):');
 
-    try {
-      const response = await permitsAPI.close(permit.id, {
-        housekeeping_done: housekeepingDone,
-        tools_removed: toolsRemoved,
-        locks_removed: locksRemoved,
-        area_restored: areaRestored,
-        remarks: remarks || ''
-      });
+  try {
+    const response = await permitsAPI.close(permit.id, {
+      housekeeping_done: housekeepingDone,
+      tools_removed: toolsRemoved,
+      locks_removed: locksRemoved,
+      area_restored: areaRestored,
+      remarks: remarks || ''
+    });
 
-      if (response.success) {
-        alert('✅ Permit closed successfully!');
-        loadDashboardData();
-      } else {
-        alert('❌ Failed to close permit: ' + response.message);
-      }
-    } catch (error) {
-      console.error('Error closing permit:', error);
-      alert('❌ Error closing permit');
+    if (response.success) {
+      alert('✅ Permit closed successfully!');
+      loadDashboardData();
+    } else {
+      alert('❌ Failed to close permit: ' + response.message);
     }
-  };
+  } catch (error) {
+    console.error('Error closing permit:', error);
+    alert('❌ Error closing permit');
+  }
+};
 
   const getStatusBadge = (status: string) => {
     const statusConfig: Record<string, { label: string; className: string }> = {
@@ -486,7 +484,7 @@ export function SupervisorDashboard({ onNavigate }: SupervisorDashboardProps) {
       {/* In Progress PTWs - Special table with Extend/Close buttons */}
       <InProgressTable permits={inProgressPermits} />
 
-      {/* PTW Extended */}
+      {/* PTW Extended - NEW TABLE! */}
       <div className="overflow-hidden bg-white border border-purple-200 rounded-lg shadow-sm">
         <div className="p-4 border-b border-purple-200 bg-purple-50">
           <div className="flex items-center justify-between">
@@ -609,26 +607,6 @@ export function SupervisorDashboard({ onNavigate }: SupervisorDashboardProps) {
           </div>
         </button>
       </div>
-
-      {/* Modals */}
-      <ExtendPTWModal
-        permit={selectedPermitForExtend}
-        isOpen={extendModalOpen}
-        onClose={() => {
-          setExtendModalOpen(false);
-          setSelectedPermitForExtend(null);
-        }}
-        onSubmit={handleSubmitExtension}
-      />
-
-      <PermitDetailView
-        permitId={selectedPermitId}
-        isOpen={detailViewOpen}
-        onClose={() => {
-          setDetailViewOpen(false);
-          setSelectedPermitId(null);
-        }}
-      />
     </div>
   );
 }
